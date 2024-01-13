@@ -104,7 +104,7 @@ function wrapGeneric(
   const genericOrProps = generic
     ? `{ new<${generic}>(): { $props: ${
         _props || "{}"
-      }, $emit: ${emits} , $children: ${_slots}  } }`
+      }, $emit: ${_emits} , $children: ${_slots}  } }`
     : _props;
 
   // NOTE when generic we need to pass empty values for DeclareComponent Params,
