@@ -5,19 +5,18 @@ import {
   DeclareEmits,
   EmitsToProps,
   ComponentProps,
+  SlotsType,
   useModel as _useModel,
 } from "vue";
 
-type __COMP__ = DeclareComponent<{test: { foo: string }
+const __model_modelValue = defineModel({
+  default: false,
+});;
 
-  default: false,
-: any} & EmitsToProps<DeclareEmits<{['update:test']: [{ foo: string }]
-['update:
-  default: false,
-']: [any]}>>,ComponentData<typeof ComponentOptions>, DeclareEmits<{['update:test']: [{ foo: string }]
-['update:
-  default: false,
-']: [any]}>, {}, typeof ComponentOptions>; const ComponentOptions = defineComponent(({
+type __COMP__ = DeclareComponent<{test: { foo: string }
+modelValue: ExtractModelType<typeof __model_modelValue>} & EmitsToProps<{['update:test']: [{ foo: string }]
+['update:modelValue']: [ExtractModelType<typeof __model_modelValue>]}>,ComponentData<typeof ComponentOptions>, {['update:test']: [{ foo: string }]
+['update:modelValue']: [ExtractModelType<typeof __model_modelValue>]}, SlotsType<{}>, typeof ComponentOptions>; const ComponentOptions = defineComponent(({
   __name: 'Comp',
   props: {
     "test": { type: Object },
@@ -52,12 +51,22 @@ expectType<{
   // @ts-expect-error not any
 }>(getComponentEmits(Comp));
 
+const props = getComponentProps(Comp);
+
+props.modelValue;
+props.test;
+
+// @ts-expect-error does not exist
+props.randomProp;
+
 expectType<{
-  modelValue: { foo: string };
-  test?: boolean;
-}>(getComponentProps(Comp));
+  modelValue: boolean;
+  test?: { foo: string };
+  "onUpdate:modelValue"?: (v: boolean) => void;
+  "onUpdate:test"?: (v: { foo: string }) => void;
+}>(props);
 
 expectType<{
   onRandom?: () => void;
   // @ts-expect-error not any
-}>(getComponentProps(Comp));
+}>(props);

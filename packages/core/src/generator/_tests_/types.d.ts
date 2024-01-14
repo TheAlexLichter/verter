@@ -4,6 +4,7 @@ import {
   ComponentEmits,
   ComponentData,
   ComponentSlots,
+  ModelRef,
 } from "vue";
 
 declare global {
@@ -17,4 +18,6 @@ declare global {
   function getComponentEmits<T>(component: T): ComponentEmits<T>;
   function getComponentData<T>(component: T): ComponentData<T>;
   function getComponentSlots<T>(component: T): ComponentSlots<T>;
+
+  type ExtractModelType<T> = T extends ModelRef<infer V> ? V : any;
 }

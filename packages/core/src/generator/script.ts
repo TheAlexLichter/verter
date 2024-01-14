@@ -3,6 +3,7 @@ import {
   SFCParseResult,
   compileScript,
 } from "@vue/compiler-sfc";
+import type * as _babel_types from "@babel/types";
 
 export const DEFAULT_FILENAME = "anonymous.vue";
 
@@ -21,6 +22,9 @@ type VueAPISetup =
 type ResolvedModel = {
   name: string;
   type: string;
+
+  // declares the model as a variable to resolve the type
+  declare: boolean;
 };
 
 export function generateScript(sfc: SFCParseResult) {
@@ -49,7 +53,7 @@ export function generateScript(sfc: SFCParseResult) {
   const slots = resolveSlots(compiled);
   const emits = resolveEmits(compiled, models);
 
-  return wrapGeneric(content, generic, props, emits, slots);
+  return wrapGeneric(content, generic, models, props, emits, slots);
 }
 
 const possibleExports = [
@@ -83,15 +87,17 @@ function wrapWithDefineComponent(content: string) {
 function wrapGeneric(
   content: string,
   generic: string | boolean,
+  models: ResolvedModel[],
   props: string,
   emits: string,
   slots: string = "{}"
 ) {
-  const component = wrapWithDefineComponent(content);
-  // const component = `const ${
-  //   VariableName.Options
-  // } = defineComponent(${removeExportsAndDefineComponent(content)})`;
+  const declarations = models
+    .filter((x) => x.declare)
+    .map((x) => `const ${getModelVarName(x.name)} = ${x.declaration};`)
+    .join("\n");
 
+  const component = wrapWithDefineComponent(content);
   const _props =
     [props, emits && `EmitsToProps<${emits}>`].filter(Boolean).join(" & ") ||
     "{}";
@@ -112,7 +118,9 @@ function wrapGeneric(
   const emit = generic ? "{}" : _emits;
   const declareComponent = `DeclareComponent<${genericOrProps},${_data}, ${emit}, ${_slots}, ${_options}>`;
 
-  return `type ${VariableName.InternalComponent} = ${declareComponent}; ${component};`;
+  return `${declarations ? declarations + ";\n\n" : ""}type ${
+    VariableName.InternalComponent
+  } = ${declareComponent}; ${component};`;
 }
 
 function resolveProps(scriptSetup: SFCScriptBlock, models: ResolvedModel[]) {
@@ -123,10 +131,10 @@ function resolveProps(scriptSetup: SFCScriptBlock, models: ResolvedModel[]) {
   if (!props) return ["", modelProps].filter(Boolean).join(" & ");
 
   if (props.typeParameters) {
-    return [props.typeParameters[0], modelProps].filter(Boolean).join(" & ");
+    return [props.typeParameters[0].value, modelProps].filter(Boolean).join(" & ");
   }
 
-  if (props.arguments?.[0]) {
+  if (props.args?.[0]) {
     return [`typeof ${VariableName.Options}['props']`, modelProps]
       .filter(Boolean)
       .join(" & ");
@@ -148,13 +156,14 @@ function resolveModelEmits(models: ResolvedModel[]) {
     .map((x) => `['update:${x.name}']: [${x.type || "any"}]`)
     .join("\n");
   if (!emits) return "";
-  return `DeclareEmits<{${emits}}>`;
+  // return `DeclareEmits<{${emits}}>`;
+  return `{${emits}}`;
 }
 
 function resolveSlots(scriptSetup: SFCScriptBlock) {
   const slots = resolveCompilerFunctions(scriptSetup, "defineSlots").next()
     .value;
-  if (!slots) return "";
+  if (!slots) return undefined;
 
   if (slots.typeParameters) {
     return slots.typeParameters[0];
@@ -170,7 +179,7 @@ function resolveEmits(scriptSetup: SFCScriptBlock, models: ResolvedModel[]) {
     resolveCompilerFunctions(scriptSetup, "defineEmits").next().value ?? "";
   if (!emits) return ["", modelEmits].filter(Boolean).join(" & ");
   if (emits.typeParameters) {
-    return [`DeclareEmits<${emits.typeParameters[0]}>`, modelEmits]
+    return [`DeclareEmits<${emits.typeParameters[0].value}>`, modelEmits]
       .filter(Boolean)
       .join(" & ");
   }
@@ -179,14 +188,28 @@ function resolveEmits(scriptSetup: SFCScriptBlock, models: ResolvedModel[]) {
   return `DeclareEmits<${emits}>`;
 }
 
-function* resolveModels(scriptSetup: SFCScriptBlock) {
+export function* resolveModels(scriptSetup: SFCScriptBlock) {
+  console.log("ddd", scriptSetup);
   for (const it of resolveCompilerFunctions(scriptSetup, "defineModel")) {
     // the argument is a string, we need to remove the quotes
-    const name = it.arguments?.[0]?.slice(1, -1) ?? "modelValue";
-    const type = it.typeParameters?.[0] ?? it.arguments?.[1] ?? "any";
+
+    const hasNamedArgument = it.args?.[0]?.type === "StringLiteral";
+    const hasTypeParameter = !!it.typeParameters?.[0];
+    const declare = !hasTypeParameter;
+
+    const name = hasNamedArgument ? it.args![0].value : "modelValue";
+    const type = hasTypeParameter
+      ? it.typeParameters?.[0]?.value!
+      : `ExtractModelType<typeof ${getModelVarName(name)}>`;
+
+    console.log("resolved", name, type);
     yield {
       name,
       type,
+      declare,
+      declaration: declare
+        ? scriptSetup.loc.source.slice(it.node.start, it.node.end)
+        : undefined,
     } satisfies ResolvedModel;
   }
 }
@@ -205,13 +228,14 @@ function* resolveCompilerFunctions(
 }
 
 function* retrieveFunctionCall(
-  statements: SFCScriptBlock["scriptSetupAst"],
+  statements: _babel_types.Statement[],
   source: string,
   name: VueAPISetup
 ): Generator<{
   name: string;
-  arguments?: string[];
-  typeParameters?: string[];
+  node: _babel_types.CallExpression;
+  args?: RetrieveValue[];
+  typeParameters?: RetrieveValue[];
 }> {
   if (!statements) return undefined;
 
@@ -227,38 +251,41 @@ function* retrieveFunctionCall(
       ) {
         yield {
           name,
-          arguments: statement.expression.arguments?.map((x) =>
-            retrieveString(x, source)
+          node: statement.expression,
+          args: statement.expression.arguments?.map((x) =>
+            retriveValue(x, source)
           ),
           typeParameters: statement.expression.typeParameters?.params.map((x) =>
-            retrieveString(x, source)
+            retriveValue(x, source)
           ),
         };
       }
     }
 
-    // @ts-expect-error some error
-    if (statement.declarations && statement.declarations.length) {
-      // @ts-expect-error some error
-      for (let d = 0; d < statement.declarations.length; d++) {
-        // @ts-expect-error some error
-        const declaration = statement.declarations[d];
-        if (
-          declaration.init.type === "CallExpression" &&
-          declaration.init.callee.name === name
-        ) {
-          yield {
-            name,
-            // @ts-expect-error
-            arguments: declaration.init.arguments?.map((x) =>
-              retrieveString(x, source)
-            ),
-            typeParameters:
-              // @ts-expect-error
-              declaration.init.typeParameters?.params.map((x) =>
-                retrieveString(x, source)
+    if (
+      statement.type === "VariableDeclaration" &&
+      statement.declarations &&
+      statement.declarations.length
+    ) {
+      if (statement.declarations && statement.declarations.length) {
+        for (let d = 0; d < statement.declarations.length; d++) {
+          const declaration = statement.declarations[d];
+          if (
+            declaration?.init?.type === "CallExpression" &&
+            // @ts-expect-error .name not inferred here
+            declaration.init.callee.name === name
+          ) {
+            yield {
+              name,
+              node: declaration.init,
+              args: declaration.init.arguments?.map((x) =>
+                retriveValue(x, source)
               ),
-          };
+              typeParameters: declaration.init.typeParameters?.params.map((x) =>
+                retriveValue(x, source)
+              ),
+            };
+          }
         }
       }
     }
@@ -267,4 +294,42 @@ function* retrieveFunctionCall(
 
 function retrieveString(node: any, source: string) {
   return source.slice(node.start, node.end);
+}
+
+type ValueNode =
+  | _babel_types.Expression
+  | _babel_types.SpreadElement
+  | _babel_types.JSXNamespacedName
+  | _babel_types.ArgumentPlaceholder
+  | _babel_types.TSType;
+type RetrieveValue = {
+  value: string;
+  type: _babel_types.StringLiteral["type"] | string;
+  node: ValueNode;
+};
+
+function retriveValue(
+  node:
+    | _babel_types.Expression
+    | _babel_types.SpreadElement
+    | _babel_types.JSXNamespacedName
+    | _babel_types.ArgumentPlaceholder
+    | _babel_types.TSType,
+  source: string
+): RetrieveValue {
+  const value =
+    (node.type === "StringLiteral" && node.value) ||
+    source.slice(node.start ?? 0, node.end ?? 0);
+  const type = node.type;
+
+  return {
+    value,
+    type,
+
+    node,
+  };
+}
+
+function getModelVarName(name: string) {
+  return `__model_${name}`;
 }

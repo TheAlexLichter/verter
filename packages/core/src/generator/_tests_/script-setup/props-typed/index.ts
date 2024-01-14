@@ -7,7 +7,7 @@ import {
   PropType,
 } from "vue";
 
-type __COMP__ = DeclareComponent<{ foo: string },ComponentData<typeof ComponentOptions>, {}, {}, typeof ComponentOptions>; const ComponentOptions = defineComponent(({
+type __COMP__ = DeclareComponent<{ foo: string },ComponentData<typeof ComponentOptions>, {}, SlotsType<{}>, typeof ComponentOptions>; const ComponentOptions = defineComponent(({
   __name: 'Comp',
   props: {
     foo: { type: String, required: true }

@@ -11,7 +11,7 @@ type __COMP__ = DeclareComponent<EmitsToProps<DeclareEmits<{
   (event: "foo", test: string): void;
 }>>,ComponentData<typeof ComponentOptions>, DeclareEmits<{
   (event: "foo", test: string): void;
-}>, {}, typeof ComponentOptions>; const ComponentOptions = defineComponent(({
+}>, SlotsType<{}>, typeof ComponentOptions>; const ComponentOptions = defineComponent(({
   __name: 'Comp',
   emits: ["foo"],
   setup(__props, { expose: __expose, emit: __emit }) {

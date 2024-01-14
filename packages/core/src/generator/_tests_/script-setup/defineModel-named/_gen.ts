@@ -5,6 +5,7 @@ import {
     DeclareEmits,
     EmitsToProps,
     ComponentProps,
+    SlotsType,
     useModel as _useModel,
   } from "vue";
 

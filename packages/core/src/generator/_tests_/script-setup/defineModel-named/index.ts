@@ -5,10 +5,11 @@ import {
     DeclareEmits,
     EmitsToProps,
     ComponentProps,
+    SlotsType,
     useModel as _useModel,
   } from "vue";
 
-type __COMP__ = DeclareComponent<{test: { foo: string }} & EmitsToProps<DeclareEmits<{['update:test']: [{ foo: string }]}>>,ComponentData<typeof ComponentOptions>, DeclareEmits<{['update:test']: [{ foo: string }]}>, {}, typeof ComponentOptions>; const ComponentOptions = defineComponent(({
+type __COMP__ = DeclareComponent<{test: { foo: string }} & EmitsToProps<{['update:test']: [{ foo: string }]}>,ComponentData<typeof ComponentOptions>, {['update:test']: [{ foo: string }]}, SlotsType<{}>, typeof ComponentOptions>; const ComponentOptions = defineComponent(({
   __name: 'Comp',
   props: {
     "test": { type: Object },

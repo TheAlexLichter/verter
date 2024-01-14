@@ -7,25 +7,34 @@ import {
   PropType,
 } from "vue";
 
-type __COMP__ = DeclareComponent<typeof ComponentOptions['props'],ComponentData<typeof ComponentOptions>, {}, {}, typeof ComponentOptions>; const ComponentOptions = defineComponent({
-  __name: 'Comp',
+type __COMP__ = DeclareComponent<
+  (typeof ComponentOptions)["props"],
+  ComponentData<typeof ComponentOptions>,
+  {},
+  SlotsType<{}>,
+  typeof ComponentOptions
+>;
+const ComponentOptions = defineComponent({
+  __name: "Comp",
   props: {
-  foo: String,
-  bar: {
-    type: String,
-    default: "bar",
+    foo: String,
+    bar: {
+      type: String,
+      default: "bar",
+    },
   },
-},
   setup(__props, { expose: __expose }) {
-  __expose();
+    __expose();
 
-const props = __props;
+    const props = __props;
 
-const __returned__ = { props }
-Object.defineProperty(__returned__, '__isScriptSetup', { enumerable: false, value: true })
-return __returned__
-}
-
+    const __returned__ = { props };
+    Object.defineProperty(__returned__, "__isScriptSetup", {
+      enumerable: false,
+      value: true,
+    });
+    return __returned__;
+  },
 });
 declare const Comp: __COMP__;
 

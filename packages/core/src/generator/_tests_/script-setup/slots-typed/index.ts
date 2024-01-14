@@ -6,7 +6,7 @@ import {
   SlotsType,
 } from "vue";
 
-type __COMP__ = DeclareComponent<{},ComponentData<typeof ComponentOptions>, {}, SlotsType<{ foo: () => any }>, typeof ComponentOptions>; const ComponentOptions = defineComponent(({
+type __COMP__ = DeclareComponent<{},ComponentData<typeof ComponentOptions>, {}, SlotsType<[object Object]>, typeof ComponentOptions>; const ComponentOptions = defineComponent(({
   __name: 'Comp',
   setup(__props, { expose: __expose }) {
   __expose();

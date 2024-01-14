@@ -1,4 +1,5 @@
-import { generateScript } from "../dist/index.js";
+// import { generateScript } from "../dist/index.js";
+import { generateScript } from "../dist/generator/index.js";
 import { glob } from "glob";
 import { dirname } from "path";
 import fs from "fs-extra";
@@ -21,9 +22,12 @@ async function processDir(dir) {
     fs.readFile(compFilePath, "utf8"),
   ]);
 
-  const outputFilePath = `${dir}\\index.ts`;
+  const outputFilePath = `.\\generated\\${dir}\\index.ts`;
 
-  const parsed = parse(compFile, { filename: "Comp.vue" });
+  const parsed = parse(compFile, {
+    filename: "Comp.vue",
+    templateParseOptions: {},
+  });
   //   console.log('parsed', parsed)
   const output = generateScript(parsed);
 
