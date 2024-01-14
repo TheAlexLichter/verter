@@ -25,6 +25,7 @@ type ResolvedModel = {
 
   // declares the model as a variable to resolve the type
   declare: boolean;
+  declaration?: string;
 };
 
 export function generateScript(sfc: SFCParseResult) {
@@ -42,7 +43,6 @@ export function generateScript(sfc: SFCParseResult) {
     id: "random-id",
   });
 
-  compiled.scriptSetupAst;
   const content = compiled.content;
 
   const generic = script.attrs.generic;
@@ -131,7 +131,9 @@ function resolveProps(scriptSetup: SFCScriptBlock, models: ResolvedModel[]) {
   if (!props) return ["", modelProps].filter(Boolean).join(" & ");
 
   if (props.typeParameters) {
-    return [props.typeParameters[0].value, modelProps].filter(Boolean).join(" & ");
+    return [props.typeParameters[0].value, modelProps]
+      .filter(Boolean)
+      .join(" & ");
   }
 
   if (props.args?.[0]) {

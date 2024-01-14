@@ -5,7 +5,8 @@
     "dist",
     "node_modules",
     "src/generator/_tests_",
-    "src/**/*/_gen.ts"
+    "src/**/*/_gen.ts",
+    "generated"
   ],
   "compilerOptions": {
     "outDir": "./dist",

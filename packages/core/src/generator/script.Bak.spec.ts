@@ -1,5 +1,5 @@
 import { compileScript, parse } from "@vue/compiler-sfc";
-import { resolveModels } from "./script.js";
+import { generateScript, resolveModels } from "./script.Bak.js";
 
 describe("Generator script", () => {
   it("should render multiple defineModel", () => {
@@ -61,5 +61,27 @@ const model = defineModel({
         },
       ]
     `);
+  });
+  it.only("should get the correct imports", () => {
+    const parsed = parse(`
+    <script setup lang="ts">
+    const model = defineModel<{ foo: string }>();
+    </script>
+    <template>
+      <span>1</span>
+    </template>
+    
+      `);
+
+    expect(Array.from(generateScript(parsed))).toMatchInlineSnapshot(`
+    [
+      {
+        "declaration": undefined,
+        "declare": false,
+        "name": "modelValue",
+        "type": "{ foo: string }",
+      },
+    ]
+  `);
   });
 });

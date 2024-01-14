@@ -50,6 +50,9 @@ importers:
       glob:
         specifier: ^10.3.10
         version: 10.3.10
+      source-map-js:
+        specifier: ^1.0.2
+        version: 1.0.2
       typescript:
         specifier: ^5.3.3
         version: 5.3.3
