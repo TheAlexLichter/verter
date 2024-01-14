@@ -39,9 +39,9 @@ export interface PluginOption {
   ) => void | WalkResult;
 
   process?: (
-    context: ParseScriptContext,
-    locations: TypeLocation[]
-  ) => TypeLocation | TypeLocation[];
+    locations: LocationByType,
+    context: ParseScriptContext
+  ) => void | WalkResult;
 }
 
 export const enum LocationType {
@@ -58,7 +58,6 @@ export const enum LocationType {
 }
 
 export interface ImportItem {
-  from: string;
   name: string;
   alias?: string;
   type?: boolean;
@@ -96,6 +95,7 @@ export interface TypeLocationImport {
   type: LocationType.Import;
   node: _babel_types.ImportDeclaration;
   items: ImportItem[];
+  from: string;
 }
 
 export interface TypeLocationEmits {
@@ -119,9 +119,22 @@ export interface TypeLocationProps {
   }[];
 }
 
-export type TypeLocation =
-  | BaseTypeLocation
-  | TypeLocationImport
-  | TypeLocationEmits
-  | TypeLocationProps
-  | TypeLocationDeclaration;
+export type TypeLocationMap = {
+  [LocationType.Declaration]: TypeLocationDeclaration;
+  [LocationType.Import]: TypeLocationImport;
+  [LocationType.Emits]: TypeLocationEmits;
+  [LocationType.Props]: TypeLocationProps;
+  [LocationType.Slots]: BaseTypeLocation;
+  [LocationType.Options]: BaseTypeLocation;
+  [LocationType.Model]: BaseTypeLocation;
+  [LocationType.Expose]: BaseTypeLocation;
+};
+export type ValueOf<T> = T[keyof T];
+
+export type LocationByType = {
+  [K in LocationType]?: K extends keyof TypeLocationMap
+    ? Array<TypeLocationMap[K]>
+    : never;
+};
+
+export type TypeLocation = BaseTypeLocation & ValueOf<TypeLocationMap>;

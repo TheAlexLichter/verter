@@ -12,7 +12,6 @@ export default {
 
     const source = context.script!.loc.source;
     const [nameOrOptions, options] = expression.arguments;
-    // const [ type ] = expression.typeArguments
 
     const hasNamedArgument = nameOrOptions?.type === "StringLiteral";
     const propTypeArgument =
@@ -23,7 +22,7 @@ export default {
           nameOrOptions;
 
     const typeParameter = retrieveNodeString(
-      expression.typeArguments?.params?.[0],
+      expression.typeParameters?.params?.[0],
       source
     );
 
@@ -41,11 +40,11 @@ export default {
         {
           type: LocationType.Import,
           node: propTypeArgument,
+              // TODO change the import location
+          from: "<helpers>",
           items: [
             {
               name: "ExtractModelType",
-              // TODO change the import location
-              from: "<helpers>",
               type: true,
             },
           ],

@@ -16,11 +16,11 @@ export default {
       {
         type: LocationType.Import,
         node: expression,
+        // TODO change the import location
+        from: "vue",
         items: [
           {
             name: "ExtractPropTypes",
-            // TODO change the import location
-            from: "<helpers>",
             type: true,
           },
         ],
@@ -53,5 +53,14 @@ export default {
         content: "Type__props",
       },
     ];
+  },
+
+  process(locations, context) {
+    if (
+      !locations[LocationType.Props] ||
+      locations[LocationType.Props].length === 0
+    )
+      return;
+    const props = locations[LocationType.Props];
   },
 } satisfies PluginOption;

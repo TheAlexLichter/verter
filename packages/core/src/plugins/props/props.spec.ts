@@ -92,11 +92,11 @@ describe("Props plugin", () => {
           {
             type: LocationType.Import,
             node: expression,
+            // TODO change the import location
+            from: "vue",
             items: [
               {
                 name: "ExtractPropTypes",
-                // TODO change the import location
-                from: "<helpers>",
                 type: true,
               },
             ],
@@ -139,8 +139,8 @@ describe("Props plugin", () => {
             name: "defineProps",
           },
           arguments: [],
-          typeArguments: {
-            type: "TSExpressionWithTypeArguments",
+          typeParameters: {
+            type: "TSExpressionWithTypeParameters",
             params: [
               {
                 start: "defineProps<".length,
@@ -169,11 +169,11 @@ describe("Props plugin", () => {
           {
             type: LocationType.Import,
             node: expression,
+            // TODO change the import location
+            from: "vue",
             items: [
               {
                 name: "ExtractPropTypes",
-                // TODO change the import location
-                from: "<helpers>",
                 type: true,
               },
             ],
@@ -260,11 +260,11 @@ describe("Props plugin", () => {
           {
             type: LocationType.Import,
             node: expression,
+            // TODO change the import location
+            from: "vue",
             items: [
               {
                 name: "ExtractPropTypes",
-                // TODO change the import location
-                from: "<helpers>",
                 type: true,
               },
             ],
@@ -350,11 +350,11 @@ describe("Props plugin", () => {
           {
             type: LocationType.Import,
             node: expression,
+            // TODO change the import location
+            from: "vue",
             items: [
               {
                 name: "ExtractPropTypes",
-                // TODO change the import location
-                from: "<helpers>",
                 type: true,
               },
             ],
@@ -417,7 +417,7 @@ defineProps(['foo']);
           {
             items: [
               {
-                from: "<helpers>",
+                from: "vue",
                 name: "ExtractPropTypes",
                 type: true,
               },

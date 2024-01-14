@@ -2,8 +2,23 @@ import { ParseScriptContext, PluginOption, LocationType } from "./types.js";
 
 export * from "./types.js";
 
+import EmitsPlugin from "./emits/index.js";
+import PropsPlugin from "./props/index.js";
+import SlotsPlugin from "./slots/index.js";
+import ModelsPlugin from "./models/index.js";
+import ExposePlugin from "./expose/index.js";
+// import OptionsPlugin from "./options/index.js";
+// import DeclarationPlugin from "./declaration/index.js";
+// import ExportPlugin from "./export/index.js";
 
-
-const plugins: PluginOption[] = []
-
-
+export const defaultPlugins = [
+  EmitsPlugin,
+  PropsPlugin,
+  SlotsPlugin,
+  ModelsPlugin,
+  ExposePlugin,
+  //   OptionsPlugin,
+  //   DeclarationPlugin,
+  //   ImportPlugin,
+  //   ExportPlugin,
+] satisfies PluginOption[];

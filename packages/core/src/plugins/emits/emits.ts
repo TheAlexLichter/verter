@@ -1,4 +1,4 @@
-import { checkForSetupMethodCall } from "../helpers.js";
+import { checkForSetupMethodCall, retrieveNodeString } from "../helpers.js";
 import { LocationType, PluginOption } from "../types.js";
 
 export default {
@@ -8,12 +8,48 @@ export default {
     if (!context.isSetup) return;
     const expression = checkForSetupMethodCall("defineEmits", node);
     if (!expression) return;
+    const source = context.script!.loc.source;
 
-    console.log("found emits");
-    // TODO add sourmap map
-    return {
-      type: LocationType.Emits,
-      node: expression,
-    };
+    return [
+      {
+        type: LocationType.Import,
+        node: expression,
+        // TODO change the import location
+        from: "vue",
+        items: [
+          {
+            name: "DeclareEmits",
+            type: true,
+          },
+        ],
+      },
+      // create variable with return
+      {
+        type: LocationType.Declaration,
+        node: expression,
+
+        declaration: {
+          name: "__emits",
+          content: retrieveNodeString(expression, source) || "{}",
+        },
+      },
+      // get the type from variable
+      {
+        type: LocationType.Declaration,
+        node: expression,
+
+        // TODO debug this to check if this is the correct type
+        declaration: {
+          type: "type",
+          name: "Type__emits",
+          content: `DeclareEmits<typeof __emits>;`,
+        },
+      },
+      {
+        type: LocationType.Emits,
+        node: expression,
+        content: "Type__emits",
+      },
+    ];
   },
 } satisfies PluginOption;

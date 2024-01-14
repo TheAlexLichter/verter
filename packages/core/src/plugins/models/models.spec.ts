@@ -104,8 +104,8 @@ describe("Props plugin", () => {
             name: "defineModel",
           },
           arguments: [],
-          typeArguments: {
-            type: "TSExpressionWithTypeArguments",
+          typeParameters: {
+            type: "TSExpressionWithtypeParameters",
             params: [
               {
                 start: "defineModel<".length,
@@ -265,11 +265,11 @@ describe("Props plugin", () => {
           {
             type: LocationType.Import,
             node: argumentExpression,
+            // TODO change the import location
+            from: "<helpers>",
             items: [
               {
                 name: "ExtractModelType",
-                // TODO change the import location
-                from: "<helpers>",
                 type: true,
               },
             ],
@@ -378,11 +378,11 @@ describe("Props plugin", () => {
           {
             type: LocationType.Import,
             node: argumentExpression,
+            // TODO change the import location
+            from: "<helpers>",
             items: [
               {
                 name: "ExtractModelType",
-                // TODO change the import location
-                from: "<helpers>",
                 type: true,
               },
             ],
