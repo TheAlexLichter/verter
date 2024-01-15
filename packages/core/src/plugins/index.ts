@@ -7,7 +7,7 @@ import PropsPlugin from "./props/index.js";
 import SlotsPlugin from "./slots/index.js";
 import ModelsPlugin from "./models/index.js";
 import ExposePlugin from "./expose/index.js";
-// import OptionsPlugin from "./options/index.js";
+import OptionsPlugin from "./options/index.js";
 // import DeclarationPlugin from "./declaration/index.js";
 // import ExportPlugin from "./export/index.js";
 
@@ -17,8 +17,8 @@ export const defaultPlugins = [
   SlotsPlugin,
   ModelsPlugin,
   ExposePlugin,
-  //   OptionsPlugin,
+  OptionsPlugin,
   //   DeclarationPlugin,
   //   ImportPlugin,
-  //   ExportPlugin,
+  // ExportPlugin,
 ] satisfies PluginOption[];

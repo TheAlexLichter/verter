@@ -55,12 +55,12 @@ export default {
     ];
   },
 
-  process(locations, context) {
-    if (
-      !locations[LocationType.Props] ||
-      locations[LocationType.Props].length === 0
-    )
-      return;
-    const props = locations[LocationType.Props];
-  },
+  // process(locations, context) {
+  //   if (
+  //     !locations[LocationType.Props] ||
+  //     locations[LocationType.Props].length === 0
+  //   )
+  //     return;
+  //   const props = locations[LocationType.Props];
+  // },
 } satisfies PluginOption;

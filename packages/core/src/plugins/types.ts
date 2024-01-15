@@ -16,6 +16,7 @@ export interface ParseScriptContext {
   id: string;
 
   isSetup: boolean;
+  generic?: string | true | undefined;
 
   sfc: SFCParseResult;
   script: SFCScriptBlock | null;
@@ -38,10 +39,7 @@ export interface PluginOption {
     context: ParseScriptContext
   ) => void | WalkResult;
 
-  process?: (
-    locations: LocationByType,
-    context: ParseScriptContext
-  ) => void | WalkResult;
+  process?: (context: ParseScriptContext) => void | WalkResult;
 }
 
 export const enum LocationType {
@@ -54,7 +52,7 @@ export const enum LocationType {
 
   Declaration = "declaration",
   Import = "import",
-  export = "export",
+  Export = "export",
 }
 
 export interface ImportItem {
@@ -98,6 +96,13 @@ export interface TypeLocationImport {
   from: string;
 }
 
+export interface TypeLocationExport {
+  type: LocationType.Export;
+  node: _babel_types.ImportDeclaration;
+
+  item: ImportItem & { default?: boolean; content?: string };
+}
+
 export interface TypeLocationEmits {
   type: LocationType.Emits;
   node: _babel_types.CallExpression;
@@ -128,6 +133,7 @@ export type TypeLocationMap = {
   [LocationType.Options]: BaseTypeLocation;
   [LocationType.Model]: BaseTypeLocation;
   [LocationType.Expose]: BaseTypeLocation;
+  [LocationType.Export]: TypeLocationExport;
 };
 export type ValueOf<T> = T[keyof T];
 

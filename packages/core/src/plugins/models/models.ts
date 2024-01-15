@@ -74,7 +74,7 @@ export default {
           node: propTypeArgument,
           properties: [
             {
-              name: `update:${name}`,
+              name: `'update:${name}'`,
               content: `TYPE_${typeName}`,
             },
           ],
@@ -97,7 +97,7 @@ export default {
         node: expression,
         properties: [
           {
-            name: `update:${name}`,
+            name: `'update:${name}'`,
             content: type,
           },
         ],
