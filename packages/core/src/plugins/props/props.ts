@@ -42,18 +42,18 @@ export default {
     }
 
     return [
-      {
-        type: LocationType.Import,
-        node: expression,
-        // TODO change the import location
-        from: "vue",
-        items: [
-          {
-            name: "ExtractPropTypes",
-            type: true,
-          },
-        ],
-      },
+      // {
+      //   type: LocationType.Import,
+      //   node: expression,
+      //   // TODO change the import location
+      //   from: "vue",
+      //   items: [
+      //     {
+      //       name: "ExtractPropTypes",
+      //       type: true,
+      //     },
+      //   ],
+      // },
       // create variable with return
       {
         type: LocationType.Declaration,
@@ -63,7 +63,20 @@ export default {
 
         declaration: {
           name: "__props",
+
+          // content: expression.arguments.length.
+
           content: retrieveNodeString(expression, source) || "{}",
+          // content: expression.typeParameters?.params.length
+          //   ? retrieveNodeString(expression, source)
+          //   : expression.arguments.length === 0
+          //   ? "defineProps({})"
+          //   : // Simple method to extract the correct prop types, this will keep
+          //     // required: true, instead of `required: boolean`, const cast could also
+          //     // be possible, but it would change the type of Component.props
+          //     `(<T extends Record<string, Prop<any>>>(o: T) => o) ({ ${
+          //       retrieveNodeString(expression, source) || "{}"
+          //     } })`,
         },
       },
       // get the type from variable
@@ -73,11 +86,10 @@ export default {
 
         generated: true,
 
-        // TODO debug this to check if this is the correct type
         declaration: {
           type: "type",
           name: "Type__props",
-          content: `ExtractPropTypes<typeof __props>;`,
+          content: `typeof __props;`,
         },
       },
       {

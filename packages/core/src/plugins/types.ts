@@ -1,4 +1,4 @@
-import { SFCParseResult, SFCScriptBlock } from "@vue/compiler-sfc";
+import { SFCParseResult, SFCScriptBlock, SFCTemplateBlock } from "@vue/compiler-sfc";
 import type * as _babel_types from "@babel/types";
 
 // TODO move somewhere else
@@ -20,6 +20,7 @@ export interface ParseScriptContext {
 
   sfc: SFCParseResult;
   script: SFCScriptBlock | null;
+  template: SFCTemplateBlock | null;  
 
   // locations: LocationType[];
 }

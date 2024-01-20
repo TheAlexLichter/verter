@@ -7,7 +7,7 @@ export default {
   name: "Declaration",
 
   walk(node, context) {
-    if (!context.isSetup) return;
+    // if (!context.isSetup) return;
 
     const source = context.script?.loc.source;
     if (!source) return;

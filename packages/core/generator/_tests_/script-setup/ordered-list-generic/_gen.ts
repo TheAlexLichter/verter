@@ -26,7 +26,7 @@ expectType<"foo">(new Comp<Item>().$props.items[0].foo);
 expectType<"foo">(dataItem.getItemAtIndex(0)!.foo);
 
 expectType<{
-  getItemAtIndex: (index: number) => Item;
+  getItemAtIndex: (index: number) => Item | undefined;
 }>(dataItem);
 
 expectType<{

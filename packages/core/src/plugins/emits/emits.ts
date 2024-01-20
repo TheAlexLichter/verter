@@ -28,6 +28,7 @@ export default {
         type: LocationType.Declaration,
         node: expression,
 
+        generated: true,
         declaration: {
           name: "__emits",
           content: retrieveNodeString(expression, source) || "{}",
@@ -37,6 +38,7 @@ export default {
       {
         type: LocationType.Declaration,
         node: expression,
+        generated: true,
 
         // TODO debug this to check if this is the correct type
         declaration: {

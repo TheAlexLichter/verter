@@ -7,7 +7,7 @@ import {
   WalkResult,
 } from "./plugins/types.js";
 import type { CompilerOptions } from "@vue/compiler-core";
-import { compileScript, parse } from "@vue/compiler-sfc";
+import { compileScript, compileTemplate, parse } from "@vue/compiler-sfc";
 
 import { defaultPlugins } from "./plugins/index.js";
 import { Statement } from "@babel/types";
@@ -41,6 +41,7 @@ export function createBuilder(config?: Partial<BuilderOptions>) {
       // TODO we should still process it
       if (!parsed.descriptor.scriptSetup && !parsed.descriptor.script)
         return "";
+
 
       const compiled = compileScript(parsed.descriptor, {
         id: filename,
@@ -146,10 +147,11 @@ export function createBuilder(config?: Partial<BuilderOptions>) {
       `
         : "";
 
-      const emits = _emits ? `DeclareEmits<${_emits}>` : undefined;
-      const props = [_props, emits && `EmitsToProps<${emits}>`]
-        .filter(Boolean)
-        .join(" & ");
+      const emits = _emits ? `DeclareEmits<${_emits}>` : "{}";
+      const props =
+        [_props, emits && `EmitsToProps<${emits}>`]
+          .filter(Boolean)
+          .join(" & ") || "{}";
 
       const slots =
         map[LocationType.Slots]?.map((x) => x.content).join(" & ") || "{}";
@@ -199,7 +201,8 @@ export function createBuilder(config?: Partial<BuilderOptions>) {
         ? genericDeclaration.items
             .map((x) => {
               const name = x.name;
-              const constraint = x.constraint;
+              const constraint =
+                x.constraint || getGenericComponentName(x.name);
               const defaultType = x.default || getGenericComponentName(x.name);
 
               return [
@@ -229,7 +232,7 @@ export function createBuilder(config?: Partial<BuilderOptions>) {
       // because it relying on the plugin to build
       const declareComponent = `type __COMP__${
         CompGeneric ? `<${CompGeneric}>` : ""
-      } = DeclareComponent<${genericOrProps}, __DATA__, __EMITS__, __SLOTS__, Type__options>`;
+      } = DeclareComponent<${genericOrProps}, __DATA__, __EMITS__, __SLOTS__,  "setup" extends keyof Type__options ? Type__options & { setup: () => {} } : Type__options >`;
 
       (map[LocationType.Export] ?? (map[LocationType.Export] = [])).push({
         type: LocationType.Export,
@@ -262,7 +265,7 @@ export function createBuilder(config?: Partial<BuilderOptions>) {
         ],
       });
 
-      if (_emits) {
+      if (emits) {
         importsArray.push({
           type: LocationType.Import,
           node: undefined as any,
@@ -359,16 +362,24 @@ function* runPlugins(
   context: ParseScriptContext
 ) {
   if (!context.script) return;
-  const ast = context.script.scriptSetupAst ?? context.script.scriptAst;
-  if (!ast) return;
-  for (const statement of ast) {
-    for (const plugin of plugins) {
-      const result = cb(plugin)?.(statement, context);
-      if (!result) continue;
-      if (Array.isArray(result)) {
-        yield* result;
-      } else {
-        yield result;
+  for (const [isSetup, ast] of [
+    [false, context.script.scriptAst],
+    [true, context.script.scriptSetupAst],
+  ] as const) {
+    if (!ast) continue;
+    const ctx = {
+      ...context,
+      isSetup,
+    };
+    for (const statement of ast) {
+      for (const plugin of plugins) {
+        const result = cb(plugin)?.(statement, ctx);
+        if (!result) continue;
+        if (Array.isArray(result)) {
+          yield* result;
+        } else {
+          yield result;
+        }
       }
     }
   }

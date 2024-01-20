@@ -12,7 +12,43 @@ export default {
 
   process: (context) => {
     const source = context.script?.content;
-    if (!source) return;
+    console.log("found source", source);
+    // empty component
+    if (!source) {
+      return [
+        {
+          type: LocationType.Import,
+          node: context.script,
+          // TODO change the import location
+          from: "vue",
+          items: [
+            {
+              name: "defineComponent",
+              type: true,
+            },
+          ],
+        },
+        {
+          type: LocationType.Declaration,
+          generated: true,
+          node: undefined,
+          declaration: {
+            name: "__options",
+            content: `defineComponent({})`,
+          },
+        },
+        {
+          type: LocationType.Declaration,
+          generated: true,
+          node: undefined,
+          declaration: {
+            type: "type",
+            name: "Type__options",
+            content: `typeof __options`,
+          },
+        },
+      ];
+    }
 
     // setup is very easy to process since export default is always the last thing
     if (context.isSetup) {

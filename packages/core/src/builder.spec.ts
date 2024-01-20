@@ -188,8 +188,97 @@ defineExpose({ getItemAtIndex });
               "
     `);
   });
+  it("multiple scripts", () => {
+    const code = `<script setup lang="ts">
+    const props = defineProps<{
+      id?: string;
+      label?: string;
+    
+      icon?: string;
+      required?: string | boolean;
+    
+      noBorder?: string | boolean;
+    }>();
+    
+    </script>
+    <script lang="ts">
+    const xx = 1
+    export default {
+      inheritAttrs: false,
+    };
+    </script>
+    <template>
+      <span>1</span>
+      <input v-model="msg" />
+      <span v-cloak>{{ msg }}</span>
+      <my-comp test="1"></my-comp>
+      <my-comp v-for="i in 5" :key="i" :test="i"></my-comp>
+    </template>
+    `;
+    const builder = createBuilder({});
+    const res = builder.process("test.vue", code);
+    expect(res).toMatchInlineSnapshot(`
+      "
+      import { defineComponent } from 'vue';
+      import { defineComponent as _defineComponent } from 'vue'
+      import { DeclareComponent } from 'vue';
+      import { DeclareEmits, EmitsToProps } from 'vue';
 
-  it.only("babel parser", () => {
+
+
+      const __options = defineComponent(({
+        ...__default__,
+        __name: 'test',
+        props: {
+          id: { type: String, required: false },
+          label: { type: String, required: false },
+          icon: { type: String, required: false },
+          required: { type: [String, Boolean], required: false },
+          noBorder: { type: [String, Boolean], required: false }
+        },
+        setup(__props: any, { expose: __expose }) {
+        __expose();
+
+          const props = __props;
+          
+          
+      const __returned__ = { xx, props }
+      Object.defineProperty(__returned__, '__isScriptSetup', { enumerable: false, value: true })
+      return __returned__
+      }
+
+      }));
+      type Type__options = typeof __options;
+      const __props = defineProps<{
+            id?: string;
+            label?: string;
+          
+            icon?: string;
+            required?: string | boolean;
+          
+            noBorder?: string | boolean;
+          }>();
+      type Type__props = typeof __props;;
+
+
+      // expose
+
+
+      type __PROPS__ = Type__props & EmitsToProps<{}>;
+      type __DATA__ = {};
+      type __EMITS__ = {};
+      type __SLOTS__ = {};
+
+      type __COMP__ = DeclareComponent<__PROPS__, __DATA__, __EMITS__, __SLOTS__,  "setup" extends keyof Type__options ? Type__options & { setup: () => {} } : Type__options >
+
+
+
+      export default __options as unknown as __COMP__;
+              "
+    `);
+  });
+
+  it("babel parser", () => {
     // Wrap your type in an expression (TypeScript type assertion)
     const code = `type MyType<T extends { item: string }, X> = {}`;
 

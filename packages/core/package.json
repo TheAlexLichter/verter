@@ -8,6 +8,7 @@
     "build": "tsc",
     "dev": "tsc --watch",
     "generate": "node ./scripts/generate.js",
+    "process": "node ./scripts/processDir.js",
     "lint": "TIMING=1 eslint src/**/*.ts* --fix",
     "clean": "rm -rf .turbo && rm -rf node_modules && rm -rf dist",
     "test": "vitest"

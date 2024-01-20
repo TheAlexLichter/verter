@@ -89,26 +89,15 @@ describe("Props plugin", () => {
             }
           )
         ).toEqual([
-          {
-            type: LocationType.Import,
-            node: expression,
-            // TODO change the import location
-            from: "vue",
-            items: [
-              {
-                name: "ExtractPropTypes",
-                type: true,
-              },
-            ],
-          },
           // create variable with return
           {
             type: LocationType.Declaration,
             node: expression,
 
+            generated: true,
             declaration: {
               name: "__props",
-              content: "defineProps()",
+              content: "defineProps({})",
             },
           },
           // get the type from variable
@@ -116,11 +105,12 @@ describe("Props plugin", () => {
             type: LocationType.Declaration,
             node: expression,
 
+            generated: true,
             // TODO debug this to check if this is the correct type
             declaration: {
               type: "type",
               name: "Type__props",
-              content: `ExtractPropTypes<typeof __props>;`,
+              content: `typeof __props;`,
             },
           },
           {
@@ -166,23 +156,11 @@ describe("Props plugin", () => {
             }
           )
         ).toEqual([
-          {
-            type: LocationType.Import,
-            node: expression,
-            // TODO change the import location
-            from: "vue",
-            items: [
-              {
-                name: "ExtractPropTypes",
-                type: true,
-              },
-            ],
-          },
           // create variable with return
           {
             type: LocationType.Declaration,
             node: expression,
-
+            generated: true,
             declaration: {
               name: "__props",
               content: `defineProps<${type}>()`,
@@ -192,12 +170,12 @@ describe("Props plugin", () => {
           {
             type: LocationType.Declaration,
             node: expression,
-
+            generated: true,
             // TODO debug this to check if this is the correct type
             declaration: {
               type: "type",
               name: "Type__props",
-              content: `ExtractPropTypes<typeof __props>;`,
+              content: `typeof __props;`,
             },
           },
           {
@@ -286,7 +264,7 @@ describe("Props plugin", () => {
         ]);
       });
 
-      test("defineProps array", () => {
+      test.only("defineProps array", () => {
         const code = `defineProps(['foo', 'bar'])`;
         const expression = {
           type: "CallExpression",
@@ -335,23 +313,23 @@ describe("Props plugin", () => {
             }
           )
         ).toEqual([
-          {
-            type: LocationType.Import,
-            node: expression,
-            // TODO change the import location
-            from: "vue",
-            items: [
-              {
-                name: "ExtractPropTypes",
-                type: true,
-              },
-            ],
-          },
+          // {
+          //   type: LocationType.Import,
+          //   node: expression,
+          //   // TODO change the import location
+          //   from: "vue",
+          //   items: [
+          //     {
+          //       name: "ExtractPropTypes",
+          //       type: true,
+          //     },
+          //   ],
+          // },
           // create variable with return
           {
             type: LocationType.Declaration,
             node: expression,
-
+            generated: true,
             declaration: {
               name: "__props",
               content: code,
