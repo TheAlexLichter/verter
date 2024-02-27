@@ -1,4 +1,4 @@
 {
   "extends": "../../tsconfig.base.json",
-  "include": ["./generated"]
+  "include": ["./generated/**/*.ts", "./generator/types.d.ts"]
 }
