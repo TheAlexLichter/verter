@@ -217,7 +217,6 @@ function generateNodeText(
 
   switch (node.type) {
     case "CallExpression": {
-      // TODO append ctx?
       const callee = generateNodeText(node.callee, ignoreCtx); // appendCtx(node.callee.name, ctx);
       const args = node.arguments
         .map((x) => generateNodeText(x, ignoreCtx, ctx))
@@ -226,7 +225,6 @@ function generateNodeText(
       return `${callee}(${args})`;
     }
     case "Identifier": {
-      // TODO append ctx?
       return appendCtx(node.name, ignoreCtx, ctx);
     }
     case "MemberExpression": {
@@ -290,10 +288,27 @@ function generateNodeText(
 
     case "StringLiteral":
     case "NumericLiteral":
-    case "TemplateLiteral":
     case "BooleanLiteral": {
       return JSON.stringify(node.value);
     }
+    case "TemplateLiteral": {
+      const quasis = node.quasis.map((x) => x.value.raw);
+      const expressions = node.expressions.map((x) =>
+        generateNodeText(x, ignoreCtx, ctx)
+      );
+      const content = quasis.reduce((prev, cur, currentIndex) => {
+        return (
+          prev +
+          cur +
+          (expressions[currentIndex]
+            ? `\$\{${expressions[currentIndex]}\}`
+            : "")
+        );
+      }, "");
+
+      return `\`${content}\``;
+    }
+
     case "NullLiteral": {
       return "null";
     }
