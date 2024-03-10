@@ -179,7 +179,7 @@ export function createBuilder(config?: Partial<BuilderOptions>) {
 
         // used to spread the props
         let propsName = `({} as ComponentExpectedProps<__COMP__${
-          context.generic ? `<${context.generic}>` : ""
+          context.generic ? `<${genericNames.join(",")}>` : ""
         }>)`;
 
         const propsProps = new Set<string>();
@@ -252,8 +252,6 @@ export function createBuilder(config?: Partial<BuilderOptions>) {
         `
           : "";
       }
-
-      const templateContent = getTemplate();
 
       const emits = _emits ? `DeclareEmits<${_emits}>` : "{}";
       const props =
@@ -395,6 +393,8 @@ export function createBuilder(config?: Partial<BuilderOptions>) {
           items: [{ name: "SlotsType", type: true }],
         });
       }
+
+      const templateContent = getTemplate();
 
       // TODO should group imports
       const imports = map[LocationType.Import]?.reduce((prev, curr) => {

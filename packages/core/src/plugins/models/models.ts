@@ -53,6 +53,7 @@ export default {
         {
           type: LocationType.Declaration,
           node: propTypeArgument,
+          generated: true,
 
           declaration: {
             name: typeName,
@@ -63,6 +64,7 @@ export default {
         {
           type: LocationType.Declaration,
           node: propTypeArgument,
+          generated: true,
           declaration: {
             name: `TYPE_${typeName}`,
             type: "type",
@@ -72,6 +74,7 @@ export default {
         {
           type: LocationType.Emits,
           node: propTypeArgument,
+          generated: true,
           properties: [
             {
               name: `'update:${name}'`,
@@ -82,6 +85,7 @@ export default {
         {
           type: LocationType.Props,
           node: propTypeArgument,
+          generated: true,
           properties: [
             {
               name,
