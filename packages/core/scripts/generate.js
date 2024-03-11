@@ -19,7 +19,7 @@ const builder = createBuilder();
 
 async function processDir(dir) {
   const genFilePath = `${dir}/_gen.ts`;
-  const compFilePath = `${dir}/Comp.vue`;
+  const compFilePath = `${dir}/Index.vue`;
 
   const [genFile, compFile] = await Promise.all([
     fs.readFile(genFilePath, "utf8"),
