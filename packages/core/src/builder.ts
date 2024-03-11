@@ -261,6 +261,7 @@ export function createBuilder(config?: Partial<BuilderOptions>) {
           }
 
           const _ctx = ctx();
+          const _comp = {} as any as ExtractRenderComponents<typeof _ctx>;
   
           return (
             <>

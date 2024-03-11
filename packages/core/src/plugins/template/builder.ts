@@ -125,10 +125,15 @@ function resolveComponentTag(
   if (node.tagType === ElementTypes.COMPONENT) {
     const camel = camelize(node.tag);
     // if not camel just return
-    if (camel === node.tag) return node.tag;
+    if (camel === node.tag) {
+      return `_comp.${node.tag}`;
+    }
     // NOTE probably this is not 100% correct, maybe we could check if the component exists
     // by passing in the context
-    return capitalize(camel);
+    return `_comp.${capitalize(camel)}`;
+  }
+  if (node.tagType === ElementTypes.SLOT) {
+    return "Slot";
   }
   return node.tag;
 }
@@ -158,7 +163,7 @@ function renderAttribute(
     return `${name}={${content}}`;
   }
 
-  return `${name}={${JSON.stringify(content)}`;
+  return `${name}={${JSON.stringify(content)}}`;
 }
 
 function renderDirective(
