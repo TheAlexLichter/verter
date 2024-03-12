@@ -1,1 +1,1 @@
-export { generateScript } from "./generator/index.js";
+export * from "./builder.js";

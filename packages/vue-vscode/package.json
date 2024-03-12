@@ -1,0 +1,55 @@
+{
+  "name": "@verter/vue-vscode",
+  "version": "1.0.0",
+  "description": "Verter VSCode Extension",
+  "main": "dist/extension.js",
+  "type": "commonjs",
+  "scripts": {
+    "build": "vite build",
+    "watch": "pnpm build --watch",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "Carlos Rodrigues <pikax>",
+  "license": "MIT",
+  "dependencies": {
+    "@types/vscode": "^1.87.0",
+    "@verter/language-server": "workspace:^",
+    "vscode-languageclient": "^9.0.1"
+  },
+  "devDependencies": {
+    "vite": "^5.0.11"
+  },
+  "engines": {
+    "vscode": "^1.75.0"
+  },
+  "activationEvents": [
+    "onLanguage:vue",
+    "onCommand:verter.restartLanguageServer",
+    "onLanguage:javascript",
+    "onLanguage:typescript"
+  ],
+  "contributes": {
+    "configuration": {
+      "type": "object",
+      "title": "Verter",
+      "properties": {
+        "verter.enable": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable/Disable Verter"
+        }
+      }
+    },
+    "commands": [
+      {
+        "command": "verter.helloWorld",
+        "title": "Hello World"
+      },
+      {
+        "command": "verter.restartLanguageServer",
+        "title": "Verter: Restart Language Server"
+      }
+    ]
+  }
+}

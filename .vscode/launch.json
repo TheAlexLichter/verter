@@ -1,0 +1,39 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "node",
+      "request": "attach",
+      "name": "Attach debugger to language server",
+      "port": 6009,
+      "outFiles": [
+        "${workspaceRoot}/packages/language-server/dist/**/*.js",
+        "${workspaceRoot}/packages/vue-vscode/dist/**/*.js"
+      ],
+      "skipFiles": ["<node_internals>/**"]
+    },
+    {
+      "type": "extensionHost",
+      "request": "launch",
+      "name": "Launch Client",
+      "runtimeExecutable": "${execPath}",
+      "args": [
+        "--extensionDevelopmentPath=${workspaceRoot}/packages/vue-vscode",
+
+        "--disable-extensions",
+        // "--extensionDevelopmentPath=${workspaceRoot}/extensions/vscode-vue",
+        // "--extensionDevelopmentPath=${workspaceRoot}/extensions/vscode-vue-language-features",
+        // "${workspaceRoot}/samples/vue3/typescript-diagnostics"
+      ],
+      "outFiles": [
+        "${workspaceRoot}/packages/vue-vscode/dist/**/*.js",
+        "${workspaceRoot}/packages/language-server/dist/**/*.js"
+      ],
+      "autoAttachChildProcesses": true
+      //   "preLaunchTask": {
+      //     "type": "npm",
+      //     "script": "dev-extension"
+      //   }
+    }
+  ]
+}

@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
+    "dev-extension": "pnpm --filter @verter/language-server --filter @verter/vue-vscode watch",
     "update-all": "pnpm up -r -i -L"
   },
   "keywords": [],
