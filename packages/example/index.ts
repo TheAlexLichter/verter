@@ -1,3 +1,4 @@
 import Test from './Test.vue'
 
-Test   
+const p = Test.props
+

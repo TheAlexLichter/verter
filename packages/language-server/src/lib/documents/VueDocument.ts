@@ -1,4 +1,5 @@
-import { Range } from "vscode-languageserver-textdocument";
+import { Range, TextDocument } from "vscode-languageserver-textdocument";
+import { basename } from "path";
 import { WritableDocument } from "./Document";
 import { urlToPath } from "../../utils";
 import { importVueCompiler } from "../../importPackages";
@@ -12,7 +13,6 @@ export class VueDocument extends WritableDocument {
   get filePath() {
     return this.path;
   }
-
   private path = urlToPath(this._uri);
 
   get parsed() {
@@ -20,10 +20,16 @@ export class VueDocument extends WritableDocument {
   }
 
   private _compiler = importVueCompiler(this._uri);
-
   private _parsed = this.parseVue();
   constructor(private _uri: string, private content: string) {
     super();
+  }
+
+  fromTextDocument(doc: TextDocument) {
+    this.version = doc.version;
+    this.content = doc.getText();
+    this._parsed = this.parseVue();
+    // this.lineCount = doc.lineCount;
   }
 
   setText(text: string) {
@@ -44,6 +50,18 @@ export class VueDocument extends WritableDocument {
 
   protected parseVue() {
     // TODO add options to parser
-    return this._compiler.parse(this.content);
+    const name = basename(this._uri);
+
+    const parsed = this._compiler.parse(this.content, {
+      filename: name,
+      //   filename: this._uri,
+      templateParseOptions: {
+        parseMode: "sfc",
+      },
+    });
+
+    console.log("");
+
+    return parsed;
   }
 }

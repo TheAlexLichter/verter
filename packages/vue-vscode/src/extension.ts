@@ -79,9 +79,15 @@ export function activateVueLanguageServer(context: ExtensionContext) {
 
   // Options to control the language client
   const clientOptions: LanguageClientOptions = {
-    documentSelector: [{ scheme: "file", language: "vue" }],
-    revealOutputChannelOn: RevealOutputChannelOn.Never,
-
+    documentSelector: [
+      { scheme: "file", language: "vue" },
+      { scheme: "file", language: "javascript" },
+      { scheme: "file", language: "typescript" },
+    ],
+    // revealOutputChannelOn: RevealOutputChannelOn.Never,
+    synchronize: {
+      fileEvents: workspace.createFileSystemWatcher("**/*.{vue}"),
+    },
     initializationOptions: {
       configuration: {
         vue: workspace.getConfiguration("vue"),
@@ -94,7 +100,7 @@ export function activateVueLanguageServer(context: ExtensionContext) {
         scss: workspace.getConfiguration("scss"),
         html: workspace.getConfiguration("html"),
       },
-      dontFilterIncompleteCompletions: true,
+      // dontFilterIncompleteCompletions: true,
     },
   };
 

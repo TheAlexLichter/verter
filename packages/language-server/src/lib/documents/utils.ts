@@ -92,3 +92,5 @@ export function getLineOffsets(text: string) {
 
   return lineOffsets;
 }
+
+

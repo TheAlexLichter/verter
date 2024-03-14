@@ -9,6 +9,8 @@ import { NotificationType, patchClient } from "@verter/language-shared";
 import { RequestType } from "@verter/language-shared";
 
 import { createBuilder } from "@verter/core";
+import { documentManager } from "./lib/documents/Manager";
+import { getTypescriptService } from "./plugins/typescript/TypescriptPlugin";
 
 export interface LsConnectionOption {
   /**
@@ -44,12 +46,30 @@ export function startServer(options: LsConnectionOption = {}) {
 
   connection.onInitialized(() => {
     console.log("inited XXX--- lOL");
-    debugger;
   });
 
-  connection.onInitialize((e) => {
-    console.log("inited --- lOL");
-    debugger;
+  connection.onInitialize((params) => {
+    // console.log("inited --- lOL");
+    // debugger;
+
+    return {
+      capabilities: {
+        textDocumentSync: {
+          openClose: true,
+          change: lsp.TextDocumentSyncKind.Incremental,
+          save: {
+            includeText: false,
+          },
+        },
+        // Tell the client that the server supports code completion
+        completionProvider: {
+          resolveProvider: true,
+          triggerCharacters: [".", "@", "<"],
+        },
+        // typeDefinitionProvider: true,
+        // hoverProvider: true,
+      },
+    };
   });
 
   connection.onNotification(NotificationType.OnDidChangeTsOrJsFile, (e) => {
@@ -89,7 +109,40 @@ export function startServer(options: LsConnectionOption = {}) {
     };
   });
 
+  const tsService = getTypescriptService(process.cwd());
+
+  connection.onCompletion((params) => {
+    if (!params.textDocument.uri.endsWith(".vue")) return null;
+
+    const r = tsService.getCompletionsAtPosition(
+      decodeURIComponent(
+        params.textDocument.uri
+          .replace("Test.vue", "Test.my.ts")
+          .replace("file:///", "")
+      ),
+      params.position,
+      { triggerKind: 1, triggerCharacter: "." }
+    );
+
+    debugger;
+    return r;
+
+    return {
+      isIncomplete: false,
+      items: [
+        {
+          label: "hello",
+          kind: lsp.CompletionItemKind.Class,
+          data: 1,
+        },
+      ],
+    };
+  });
+
   console.log("should be listening now...");
+
+  documentManager.listen(connection);
+
   connection.listen();
 }
 startServer();

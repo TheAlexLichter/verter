@@ -11,14 +11,17 @@ export default defineConfig({
 
     rollupOptions: {
       external: [
+        /node_modules/,
+        "vscode-uri",
         "vscode-languageserver",
         "vscode-languageserver/node.js",
         "vscode-languageserver/node",
         "vscode-languageserver-protocol",
         "vscode-languageserver/lib/node/main.js",
         "vscode-languageserver-textdocument",
-
-        'fs/promises',
+        "fs/promises",
+        "path",
+        'node:fs',
 
         // deps
 
