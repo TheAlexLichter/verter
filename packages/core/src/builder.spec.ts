@@ -317,7 +317,7 @@ defineExpose({ getItemAtIndex });
   });
 
 
-  test.only('parse with sourcemaps', () => {
+  test('parse with sourcemaps', () => {
     const codeStr = `<script setup lang="ts">
       // defineProps({ foo: String })
       defineProps<{ foo: string}>()
@@ -346,7 +346,8 @@ defineExpose({ getItemAtIndex });
 
     const finalMap = r.toString()
 
-    fs.writeFileSync("D:/Downloads/sourcemap-test/sourcemap-example.js", finalStr + '\n//# sourceMappingURL=sourcemap-example.js.map', 'utf-8')
+    // fs.writeFileSync("D:/Downloads/sourcemap-test/sourcemap-example.js", finalStr + '\n//# sourceMappingURL=sourcemap-example.js.map', 'utf-8')
+    fs.writeFileSync("D:/Downloads/sourcemap-test/sourcemap-example.js", finalStr, 'utf-8')
     fs.writeFileSync("D:/Downloads/sourcemap-test/sourcemap-example.js.map", finalMap.toString(), 'utf-8')
 
     // console.log('--')

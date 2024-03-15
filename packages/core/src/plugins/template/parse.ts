@@ -1,14 +1,15 @@
-import {
+import type {
   AttributeNode,
   DirectiveNode,
   ElementNode,
   ExpressionNode,
   ForParseResult,
-  NodeTypes,
   RootNode,
   TemplateChildNode,
 } from "@vue/compiler-core";
-import { isArray } from "@vue/shared";
+import {
+  NodeTypes,
+} from "@vue/compiler-core";
 
 export interface ParseContext {
   root: RootNode;
@@ -19,11 +20,11 @@ export interface ParseContext {
   next: TemplateChildNode | undefined;
 }
 
-interface Parsed {
+interface ParsedElement {
   tag?: string;
   node: TemplateChildNode;
 
-  children: Parsed[];
+  children: ParsedElement[];
 }
 
 type NativeDirectives =
@@ -375,7 +376,7 @@ export function parseProps(
   }
 }
 
-const WrapableDirectives = new Set(["v-if", "v-else-if", "v-else", "v-for"]);
+const WrapableDirectives = new Set<string>(["v-if", "v-else-if", "v-else", "v-for"] as NativeDirectives[]);
 export function isWrapable(node: DirectiveNode) {
   if (node.rawName) {
     return WrapableDirectives.has(node.rawName);

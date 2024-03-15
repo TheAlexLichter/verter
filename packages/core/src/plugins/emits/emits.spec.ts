@@ -1,4 +1,4 @@
-import { compileScript, parse } from "@vue/compiler-sfc";
+import { MagicString, compileScript, parse } from "@vue/compiler-sfc";
 import { LocationType } from "../types.js";
 import EmitsPlugin from "./index.js";
 
@@ -21,7 +21,117 @@ describe("Emits plugin", () => {
         // @ts-expect-error empty node
         expect(EmitsPlugin.walk({}, { isSetup: true })).toBeUndefined();
       });
+
+
     });
+
+    describe('sourcemap', () => {
+      test('empty', () => {
+        const code = "defineEmits()";
+        const expression = {
+          type: "CallExpression",
+          callee: {
+            name: "defineEmits",
+          },
+          start: 0,
+          end: code.length,
+          arguments: [],
+        };
+
+        const result = EmitsPlugin.walk(
+          {
+            type: "ExpressionStatement",
+            // @ts-expect-error not the right type
+            expression,
+          },
+          {
+            isSetup: true,
+            script: {
+              loc: {
+                source: code,
+              },
+            },
+          }
+        );
+
+        const s = new MagicString(code);
+
+        result.forEach(x => x.applyMap?.(s));
+
+        expect(s.toString()).toBe("const __emits = defineEmits()");
+      })
+
+      test("['foo']", () => {
+        const code = "defineEmits(['foo'])";
+        const expression = {
+          type: "CallExpression",
+          callee: {
+            name: "defineEmits",
+          },
+          start: 0,
+          end: code.length,
+          arguments: [],
+        };
+
+        const result = EmitsPlugin.walk(
+          {
+            type: "ExpressionStatement",
+            // @ts-expect-error not the right type
+            expression,
+          },
+          {
+            isSetup: true,
+            script: {
+              loc: {
+                source: code,
+              },
+            },
+          }
+        );
+
+        const s = new MagicString(code);
+
+        result.forEach(x => x.applyMap?.(s));
+
+        expect(s.toString()).toBe("const __emits = defineEmits(['foo'])");
+      })
+
+      test('{ foo: String }', () => {
+        const code = "defineEmits({ foo: String })";
+        const expression = {
+          type: "CallExpression",
+          callee: {
+            name: "defineEmits",
+          },
+          start: 0,
+          end: code.length,
+          arguments: [],
+        };
+
+        const result = EmitsPlugin.walk(
+          {
+            type: "ExpressionStatement",
+            // @ts-expect-error not the right type
+            expression,
+          },
+          {
+            isSetup: true,
+            script: {
+              loc: {
+                source: code,
+              },
+            },
+          }
+        );
+
+        const s = new MagicString(code);
+
+        result.forEach(x => x.applyMap?.(s));
+
+        expect(s.toString()).toBe("const __emits = defineEmits({ foo: String })");
+
+      })
+    })
 
     describe("ExpressionStatement", () => {
       test("empty", () => {
@@ -92,6 +202,7 @@ describe("Emits plugin", () => {
           {
             type: LocationType.Import,
             node: expression,
+            generated: true,
             from: "vue",
             items: [
               {
@@ -105,16 +216,19 @@ describe("Emits plugin", () => {
           {
             type: LocationType.Declaration,
             node: expression,
+            generated: true,
 
             declaration: {
               name: "__emits",
               content: "defineEmits()",
             },
+            applyMap: expect.any(Function),
           },
           // get the type from variable
           {
             type: LocationType.Declaration,
             node: expression,
+            generated: true,
 
             // TODO debug this to check if this is the correct type
             declaration: {
@@ -168,8 +282,8 @@ describe("Emits plugin", () => {
         ).toEqual([
           {
             type: LocationType.Import,
+            generated: true,
             node: expression,
-            // TODO change the import location
             from: "vue",
             items: [
               {
@@ -182,18 +296,20 @@ describe("Emits plugin", () => {
           {
             type: LocationType.Declaration,
             node: expression,
+            generated: true,
 
             declaration: {
               name: "__emits",
               content: `defineEmits<${type}>()`,
             },
+            applyMap: expect.any(Function),
           },
           // get the type from variable
           {
             type: LocationType.Declaration,
             node: expression,
+            generated: true,
 
-            // TODO debug this to check if this is the correct type
             declaration: {
               type: "type",
               name: "Type__emits",
@@ -260,7 +376,8 @@ describe("Emits plugin", () => {
           {
             type: LocationType.Import,
             node: expression,
-            // TODO change the import location
+            generated: true,
+
             from: "vue",
             items: [
               {
@@ -273,18 +390,21 @@ describe("Emits plugin", () => {
           {
             type: LocationType.Declaration,
             node: expression,
+            generated: true,
 
             declaration: {
               name: "__emits",
               content: code,
             },
+            applyMap: expect.any(Function),
+
           },
           // get the type from variable
           {
             type: LocationType.Declaration,
             node: expression,
+            generated: true,
 
-            // TODO debug this to check if this is the correct type
             declaration: {
               type: "type",
               name: "Type__emits",
@@ -349,8 +469,8 @@ describe("Emits plugin", () => {
         ).toEqual([
           {
             type: LocationType.Import,
-            node: expression,
-            // TODO change the import location
+            node: expression, generated: true,
+
             from: "vue",
             items: [
               {
@@ -363,18 +483,21 @@ describe("Emits plugin", () => {
           {
             type: LocationType.Declaration,
             node: expression,
+            generated: true,
 
             declaration: {
               name: "__emits",
               content: code,
             },
+            applyMap: expect.any(Function),
+
           },
           // get the type from variable
           {
             type: LocationType.Declaration,
             node: expression,
+            generated: true,
 
-            // TODO debug this to check if this is the correct type
             declaration: {
               type: "type",
               name: "Type__emits",
@@ -415,9 +538,9 @@ defineEmits(['foo']);
           })
         ).toMatchObject([
           {
+            from: "vue",
             items: [
               {
-                from: "vue",
                 name: "DeclareEmits",
                 type: true,
               },
@@ -444,6 +567,50 @@ defineEmits(['foo']);
             type: "emits",
           },
         ]);
+
+
+        // expect(
+        //   EmitsPlugin.walk(parseAst[0], {
+        //     isSetup: true,
+        //     script: parsed,
+        //   })
+        // ).toMatchObject(
+        //   [
+        //     {
+        //       "from": "vue",
+        //       "generated": true,
+        //       "items": [
+        //         {
+        //           "name": "DeclareEmits",
+        //           "type": true,
+        //         },
+        //       ],
+        //       "type": "import",
+        //     },
+        //     {
+        //       "applyMap": [Function],
+        //       "declaration": {
+        //         "content": "defineEmits(['foo'])",
+        //         "name": "__emits",
+        //       },
+        //       "generated": true,
+        //       "type": "declaration",
+        //     },
+        //     {
+        //       "declaration": {
+        //         "content": "DeclareEmits<typeof __emits>;",
+        //         "name": "Type__emits",
+        //         "type": "type",
+        //       },
+        //       "generated": true,
+        //       "type": "declaration",
+        //     },
+        //     {
+        //       "content": "Type__emits",
+        //       "type": "emits",
+        //     },
+        //   ]
+        // );
 
         // for (let i = 0; i < parseAst.length; i++) {
         //   const element = parseAst[i];

@@ -1,0 +1,801 @@
+import { MagicString } from "@vue/compiler-sfc";
+import { WalkResult } from "../types";
+import { ParsedType, parse } from "./parse";
+import type { ParsedNodeBase } from "./parse";
+import {
+  AttributeNode,
+  ComponentNode,
+  DirectiveNode,
+  ElementNode,
+  ElementTypes,
+  ExpressionNode,
+  ForParseResult,
+  NodeTypes,
+  PlainElementNode,
+  SimpleExpressionNode,
+} from "@vue/compiler-core";
+import { camelize, capitalize, isGloballyAllowed } from "@vue/shared";
+import type * as _babel_types from "@babel/types";
+
+interface ProcessContext {
+  ignoredIdentifiers?: string[];
+  declarations?: WalkResult[];
+
+  /**
+   * Override the accessor for the template
+   * @default "___VETER__ctx"
+   */
+  accessor?: string;
+  /**
+   * Override the accessor for the template
+   * @default "___VETER__comp"
+   */
+  componentAccessor?: string;
+}
+
+export function process(
+  parsed: ReturnType<typeof parse>,
+  overrideTemplate = false,
+  context: ProcessContext = {
+    ignoredIdentifiers: [],
+    declarations: [],
+    accessor: "___VETER__ctx",
+    componentAccessor: "___VERTER__comp",
+  }
+) {
+  const s = new MagicString(parsed.node.source);
+
+  renderChildren(parsed.children, s, context);
+
+  // clean <template> tag
+  if (overrideTemplate && parsed.node.children.length > 0) {
+    const firstChild = parsed.node.children[0];
+    const lastChild = parsed.node.children[parsed.node.children.length - 1];
+    s.overwrite(
+      parsed.node.loc.start.offset,
+      firstChild.loc.start.offset,
+      "(\n<>\n"
+    );
+
+    s.overwrite(
+      lastChild.loc.end.offset,
+      parsed.node.loc.end.offset + parsed.node.source.length,
+      "\n</>\n)"
+    );
+  }
+
+  return {
+    type: parsed.node.type,
+    node: parsed.node,
+    magicString: s,
+  };
+}
+
+// function renderChildren(
+//     children: ParsedNodeBase[],
+//     s: MagicString,
+//     context: ProcessContext
+// ): void
+function renderChildren(
+  children: ParsedNodeBase[],
+  s: MagicString,
+  context: ProcessContext
+): void {
+  if (children?.length > 0) {
+    for (let i = 0; i < children.length; i++) {
+      const element = children[i];
+      renderNode(element, s, context);
+    }
+  }
+  // if (!children || children.length === 0) {
+
+  // }
+  // const c = children.map((x) => renderNode(x, ignoredIdentifiers));
+  // return join ? c.join("\n") : c;
+}
+
+const render = {
+  [ParsedType.Element]: renderElement,
+  // [ParsedType.Attribute]: renderAttribute,
+  // [ParsedType.Directive]: renderDirective,
+  // [ParsedType.Template]: renderTemplate,
+  [ParsedType.Text]: renderText,
+  [ParsedType.For]: renderFor,
+  // [ParsedType.RenderSlot]: renderSlot,
+  // [ParsedType.Comment]: renderComment,
+  // [ParsedType.Interpolation]: renderInterpolation,
+  [ParsedType.Condition]: renderCondition,
+};
+
+function renderNode(
+  node: ParsedNodeBase,
+  s: MagicString,
+  context: ProcessContext
+) {
+  return render[node.type](node, s, context);
+}
+
+function renderElement(
+  node: ParsedNodeBase & {
+    node: ElementNode;
+    props: ParsedNodeBase[];
+    tag: string;
+  },
+  s: MagicString,
+  context: ProcessContext
+) {
+  // const content = node.props.map((x) => renderNode(x, s, ignoredIdentifiers, declarations)).join("\n");
+  const { name: tag, accessor } = resolveComponentTag(node.node, context);
+
+  const openTagIndex = node.node.loc.start.offset;
+  // NOTE this override is quite big, it does not provide a 1-1 mapping per character
+  s.overwrite(openTagIndex + 1, openTagIndex + node.tag.length + 1, tag);
+  if (accessor) {
+    s.prependLeft(openTagIndex + 1, `${accessor}.`);
+  }
+
+  // node.props
+  // .map((p) => renderAttribute(p, ignoredIdentifiers))
+  // .join(" ");
+
+  renderAttributes(node.props, s, context);
+
+  // renderChildren(node.props, s, ignoredIdentifiers, declarations);
+  // s.appendRight(node., closeTag);
+  // s.overwrite(node.node.loc.end.offset, node.node.loc.end.offset + closeTag.length, closeTag);
+  if (!node.node.isSelfClosing) {
+    const closeTagIndex = node.node.loc.end.offset;
+    s.overwrite(closeTagIndex - node.tag.length - 1, closeTagIndex - 1, tag);
+  }
+
+  renderChildren(node.children, s, context);
+
+  if (tag === "Slot") {
+    // TODO add declarations
+  }
+}
+
+function renderAttributes(
+  attributes: ParsedNodeBase[],
+  s: MagicString,
+  context: ProcessContext
+) {
+  for (let i = 0; i < attributes.length; i++) {
+    const attribute = attributes[i];
+    renderAttribute(attribute, s, context);
+  }
+}
+
+function renderAttribute(
+  node: ParsedNodeBase,
+  s: MagicString,
+  context: ProcessContext
+) {
+  const n = node.node as unknown as AttributeNode | DirectiveNode;
+
+  if (n.type === NodeTypes.ATTRIBUTE) {
+  } else if (n.type === NodeTypes.DIRECTIVE) {
+    if (n.name === "bind") {
+      // const name = n.arg;
+      const name = retriveStringExpressionNode(n.arg, undefined, context);
+      // if is content let it apply the mapping
+      //   const content = retriveStringExpressionNode(n.exp, s, context);
+
+      if (name !== n.rawName) {
+        // used to replace \" or \' with \{ or \}
+        let updateDelimiter = false;
+
+        switch (n.rawName[0]) {
+          case ":": {
+            if (n.exp) {
+              s.overwrite(n.loc.start.offset, n.loc.start.offset + 1, "");
+              updateDelimiter = true;
+            } else {
+              // I would like to do this, maping the whoel :name to name={name}
+              //   s.overwrite(
+              //     n.loc.start.offset,
+              //     n.loc.end.offset,
+              //     `${name}={${appendCtx(name, undefined, context)}}`
+              //   );
+              // but probably is better to do something else for renaming :/
+              // short binding :name -> name={name}
+              //   s.overwrite(n.loc.start.offset, n.loc.start.offset + 1, "");
+              //   s.move(
+              //     n.loc.start.offset,
+              //     n.loc.start.offset + 1,
+              //     n.loc.end.offset + 1
+              //   );
+
+              // this provides a better mapping, making `:` to be =_ctx.{name}
+              s.overwrite(
+                n.loc.start.offset,
+                n.loc.start.offset + 1,
+                `={${appendCtx(name, undefined, context)}}`
+              );
+              s.move(
+                n.loc.start.offset,
+                n.loc.start.offset + 1,
+                n.loc.end.offset
+              );
+            }
+            break;
+          }
+          case "@": {
+            s.overwrite(n.loc.start.offset, n.loc.start.offset + 1, "on");
+            updateDelimiter = true;
+            break;
+          }
+          // v-bind:
+          case "v": {
+            if (name) {
+              s.remove(
+                n.loc.start.offset,
+                n.loc.start.offset + "v-bind:".length
+              );
+            } else {
+              // move v-bind:[*]\" delimiter to before the v-bind;
+              const start = n.exp.loc.start.offset - 1;
+              s.move(start, start + 1, n.loc.start.offset);
+              //   s.move();
+
+              // v-bind="var" -> {...var}
+              s.overwrite(
+                n.loc.start.offset,
+                n.loc.start.offset + "v-bind=".length,
+                "..."
+              );
+            }
+            updateDelimiter = true;
+
+            // TODO handle v-on, v-bind, v-model || not sure if those are meant to be here, since the n.name should be on or model
+            break;
+          }
+          // TODO handle modifiers
+        }
+
+        if (updateDelimiter) {
+          const start = n.exp.loc.start.offset - 1;
+          s.overwrite(start, start + 1, "{", { contentOnly: true }); // replace : with {
+          //   s.move(start, n.exp.loc.start.offset - 1, n.loc.start.offset + 1); // replace : with {
+          const end = n.exp.loc.end.offset;
+          s.overwrite(end, end + 1, "}", { contentOnly: true }); // replace : with }
+        }
+      }
+
+      // if(n.rawName[0])
+    } else {
+    }
+  }
+
+  //   const name = retriveStringExpressionNode(n.arg, ignoredIdentifiers) || n.name;
+  //   const content =
+  //     retriveStringExpressionNode(n.exp, ignoredIdentifiers) ||
+  //     n.value?.content ||
+  //     n.value;
+
+  //   if (n.name === "bind") {
+  //     if (!!n.arg) {
+  //       return `${name}={${content ?? name}}`;7
+  //     }
+  //     return `{...${content}}`;
+  //   }
+  //   if (n.name === "on") {
+  //     return `on${capitalize(name)}={${content}}`;
+  //   }
+  //   if (n.type === NodeTypes.DIRECTIVE) {
+  //     return `${name}={${content}}`;
+  //   }
+
+  //   return `${name}={${JSON.stringify(content)}}`;
+}
+
+function renderText(
+  node: ParsedNodeBase,
+  s: MagicString,
+  context: ProcessContext
+) {
+  s.overwrite(
+    node.node.loc.start.offset,
+    node.node.loc.end.offset,
+    `{ ${JSON.stringify(node.content)} }`
+  );
+}
+
+function renderFor(
+  node: ParsedNodeBase & {
+    for: ForParseResult;
+    expression: SimpleExpressionNode;
+  },
+  s: MagicString,
+  context: ProcessContext
+) {
+  const { source, value, key, index } = node.for;
+
+  const keyString = key
+    ? retriveStringExpressionNode(key, undefined, context)
+    : "";
+  const indexString = index
+    ? retriveStringExpressionNode(index, undefined, context)
+    : "";
+
+  const sourceString = source
+    ? retriveStringExpressionNode(source, s, context)
+    : "()";
+
+  const valueString = value
+    ? retriveStringExpressionNode(value, undefined, context, false)
+    : "value";
+
+  // TODO content
+  //   const content = renderChildren(
+  //     node.children,
+  //     [...ignoredIdentifiers, valueString, keyString, indexString].filter(Boolean)
+  //   );
+
+  const childStart = node.children[0].node.loc.start.offset;
+  const childEnd = node.children[node.children.length - 1].node.loc.end.offset;
+  const vForStart = node.node.loc.start.offset;
+  const vForEnd = node.node.loc.end.offset;
+
+  const shouldWrapParentesis = !node.expression.content.startsWith("(");
+
+  // index of in or of, can be " in " or " of "
+
+  const InOf = [
+    " in ",
+    "   in ",
+    "   in   ",
+    " in    ",
+
+    " of ",
+    "   of ",
+    "   of   ",
+    " of    ",
+  ];
+
+  let inOfIndex = -1;
+  for (let i = 0; i < InOf.length && inOfIndex === -1; i++) {
+    inOfIndex = node.expression.content.indexOf(InOf[i]);
+  }
+  // couldn't find 'in' or 'of'
+  if (inOfIndex < 0) {
+    throw new Error("Invalid v-for expression");
+  }
+
+  const startInOf = node.expression.loc.start.offset + inOfIndex;
+  const endInOf = startInOf + 4;
+
+  // move " in " or " of " after source
+  // <li v-for="item in items"> -> <li v-for="itemitems in ">
+  s.move(
+    startInOf,
+    endInOf,
+    source.loc.end.offset < endInOf ? endInOf + 1 : source.loc.end.offset
+  );
+
+  // replace in / of with a comma
+  // <li v-for="item in items"> -> <li v-for="itemitems,">
+  s.overwrite(startInOf, endInOf, "," + (shouldWrapParentesis ? "(" : ""));
+
+  // <li v-for="itemitems,"> -> v-for="itemitems,"<li >
+  s.move(vForStart, vForEnd, childStart);
+
+  // add {  }
+  // v-for="itemitems,"<li > -> {v-for="itemitems,"<li >}
+  if (!node.NO_WRAP) {
+    s.prependLeft(childStart, "{");
+    s.appendRight(childEnd, "}");
+  }
+
+  // {v-for="itemitems,"<li >} -> { renderList"itemitems,"<li
+  s.overwrite(vForStart, vForStart + "v-for=".length, `renderList`);
+
+  // { renderList"item in _ctx.items"<li -> { renderList(item in _ctx.items)<li
+  //   if (value) {
+  s.overwrite(
+    node.expression.loc.start.offset - 1,
+    node.expression.loc.start.offset,
+    `(`
+  );
+  //   } else {
+  //     // TODO
+  //   }
+  if (source) {
+    // add `)` if we should wrap
+    const relacer = `${shouldWrapParentesis ? ")" : ""}=>{`;
+    s.overwrite(source.loc.end.offset, source.loc.end.offset + 1, relacer);
+  } else {
+    // TODO
+  }
+
+  // { renderList(item in _ctx.items)<li -> { renderList(_ctx.items, (item)<li
+  if (value) {
+    // move the value to after the source
+    s.move(
+      node.expression.loc.start.offset,
+      node.expression.loc.start.offset + inOfIndex,
+      source.loc.end.offset
+    );
+  } else {
+    // TODO
+  }
+
+  // close v-for
+  s.appendLeft(childEnd, "})");
+
+  const ignoredIdentifiers = [
+    ...context.ignoredIdentifiers,
+    valueString,
+    keyString,
+    indexString,
+  ].filter(Boolean);
+
+  const childrenContext = {
+    ...context,
+    ignoredIdentifiers,
+  };
+
+  renderChildren(node.children, s, childrenContext);
+}
+
+function renderCondition(
+  node: ParsedNodeBase & { conditions: ParsedNodeBase[] },
+  s: MagicString,
+  context: ProcessContext
+) {
+  const { conditions } = node;
+
+  let hasElse = false;
+
+  const firstCondition = conditions[0];
+  const lastCondition = conditions[conditions.length - 1];
+
+  if (firstCondition) {
+    const firstChild =
+      firstCondition.children[0]?.type === "for"
+        ? firstCondition.children[0]?.children[0]
+        : firstCondition.children[0];
+    const childStart = firstChild.node.loc.start.offset;
+    s.prependLeft(childStart, "{");
+
+    const lastChild =
+      lastCondition.children[lastCondition.children.length - 1]?.type === "for"
+        ? lastCondition.children[lastCondition.children.length - 1]?.children[
+            lastCondition.children[lastCondition.children.length - 1]?.children
+              .length - 1
+          ]
+        : lastCondition.children[lastCondition.children.length - 1];
+    const childEnd = lastChild.node.loc.end.offset;
+    s.appendRight(childEnd, "}");
+  }
+
+  for (let i = 0; i < conditions.length; i++) {
+    const condition = conditions[i];
+
+    const firstChild =
+      condition.children[0]?.type === "for"
+        ? condition.children[0]?.children[0]
+        : condition.children[0];
+    const lastChild =
+      condition.children[condition.children.length - 1]?.type === "for"
+        ? condition.children[condition.children.length - 1]?.children[
+            condition.children[condition.children.length - 1]?.children.length -
+              1
+          ]
+        : condition.children[condition.children.length - 1];
+
+    const childStart = firstChild.node.loc.start.offset;
+    const childEnd = lastChild.node.loc.end.offset;
+    const conditionStart = condition.node.loc.start.offset;
+    const conditionEnd = condition.node.loc.end.offset;
+
+    const directiveStart = condition.node.loc.start.offset;
+    const directiveEnd = directiveStart + condition.node.rawName.length + 1; // with =
+
+    if (condition.directive !== "else") {
+      // move v-if/v-else-if to before the first child
+      s.move(conditionStart, conditionEnd, childStart);
+
+      // add {  }
+      //   s.appendLeft(childStart, "{");
+      //   s.appendLeft(childEnd, "}");
+    } /*else {
+      // move v-if/v-else-if to before the first child
+      s.move(conditionStart, conditionEnd, childStart + 1);
+    }*/
+
+    switch (condition.directive) {
+      case "if": {
+        // move v-if to after the expression
+
+        // now the expression is at childStart
+        s.move(directiveStart, directiveEnd, childStart);
+
+        // replace v-if with ?
+        s.overwrite(directiveStart, directiveEnd, "?");
+        break;
+      }
+      case "else-if": {
+        // now the expression is at childStart
+        s.move(directiveStart, directiveEnd, childStart);
+
+        // replace v-else-if with ?
+        s.overwrite(directiveStart, directiveEnd, "?");
+        break;
+      }
+      case "else": {
+        // // now the expression is at childStart
+        // directive end contains `=`
+        s.move(directiveStart, directiveEnd - 1, childStart);
+
+        // replave v-else with :
+        s.overwrite(directiveStart, directiveEnd - 1, ":");
+        // s.move(directiveStart, directiveStart + 1, childStart);
+        hasElse = true;
+
+        break;
+      }
+    }
+
+    if ("expression" in condition && condition.expression) {
+      const expression = condition.expression as ExpressionNode;
+
+      // replace delimiters with ()
+      s.overwrite(
+        expression.loc.start.offset - 1,
+        expression.loc.start.offset,
+        (condition.directive === "else-if" ? ":" : "") + "("
+      );
+      s.overwrite(
+        expression.loc.end.offset,
+        expression.loc.end.offset + 1,
+        ")"
+      );
+
+      retriveStringExpressionNode(expression, s, context, true);
+    }
+
+    // s.overwrite(conditionStart - 1, conditionStart)
+
+    // renderConditionNode(condition, s, context);
+
+    // for (let i = 0; i < condition.children.length; i++) {
+    //   const child = condition.children[i];
+    //   renderNode(child, s, context);
+    // }
+    renderChildren(
+      condition.children.map((x) => {
+        if (x.type === "for") {
+          // prevent wrapping of the for loop
+          x.NO_WRAP = true;
+        }
+        return x;
+      }),
+      s,
+      context
+    );
+  }
+
+  if (!hasElse) {
+    const lastCondition = conditions[conditions.length - 1];
+
+    const lastChild =
+      lastCondition.children[lastCondition.children.length - 1]?.type === "for"
+        ? lastCondition.children[lastCondition.children.length - 1]?.children[
+            lastCondition.children[lastCondition.children.length - 1]?.children
+              .length - 1
+          ]
+        : lastCondition.children[lastCondition.children.length - 1];
+    const childEnd = lastChild.node.loc.end.offset;
+    s.prependRight(childEnd, " : undefined");
+  }
+
+  // function getContent(children: ParsedNodeBase[]) {
+  //   return renderChildren(children, ignoredIdentifiers, false).map((x) => {
+  //     // check if wrapped, if it is unwrap
+  //     if (x[0] === "{" && x[x.length - 1] === "}") {
+  //       x = x.slice(1);
+  //       x = x.slice(0, -1);
+  //     }
+  //     return x;
+  //   });
+  // }
+  // const conditions = (node.conditions as []).map((x) => {
+  //   const condition = retriveStringExpressionNode(
+  //     x.expression,
+  //     ignoredIdentifiers
+  //   );
+  //   const content = getContent(x.children ?? []);
+  //   return {
+  //     rawName: x.rawName,
+  //     condition,
+  //     content,
+  //   };
+  // });
+  // const c = conditions.reduce((prev, cur, currentIndex, arr) => {
+  //   const last = currentIndex === arr.length - 1;
+  //   if (cur.rawName !== "v-else") {
+  //     const r = `${prev ? prev + " : " : ""}(${cur.condition}) ? ${
+  //       cur.content
+  //     }`;
+  //     if (last) return r + " : undefined";
+  //     return r;
+  //   } else {
+  //     return `${prev} : ${cur.content} `;
+  //   }
+  // }, "");
+  // return `{ ${c} }`;
+}
+
+function resolveComponentTag(
+  node: PlainElementNode | ComponentNode | ElementNode,
+  context: ProcessContext
+): {
+  name: string;
+  accessor?: string;
+} {
+  if (node.tagType === ElementTypes.COMPONENT) {
+    const camel = camelize(node.tag);
+    // if not camel just return
+    if (camel === node.tag) {
+      return {
+        name: node.tag,
+        accessor: context.componentAccessor,
+      };
+    }
+    // NOTE probably this is not 100% correct, maybe we could check if the component exists
+    // by passing in the context
+    return {
+      name: capitalize(camel),
+      accessor: context.componentAccessor,
+    };
+  }
+  if (node.tagType === ElementTypes.SLOT) {
+    return {
+      name: "Slot",
+    };
+  }
+  return { name: node.tag };
+}
+
+function retriveStringExpressionNode(
+  node: ExpressionNode | undefined,
+  s: MagicString | undefined,
+  context: ProcessContext,
+  prepend = true
+) {
+  if (!node) return undefined;
+  switch (node.type) {
+    case NodeTypes.SIMPLE_EXPRESSION: {
+      if (node.isStatic) return node.content;
+
+      // Not very complex condition
+      if (!node.ast) {
+        return prepend ? appendCtx(node, s, context) : node.content;
+      }
+      const offset = node.loc.start.offset - 1;
+      return parseNodeText(node.ast, s, context, offset, prepend);
+    }
+    case NodeTypes.COMPOUND_EXPRESSION: {
+      return "NOT_KNOWN COMPOUND_EXPRESSION";
+      break;
+    }
+    default: {
+      // @ts-expect-error unknown type
+      throw new Error(`Unknown expression type ${node.type}`);
+    }
+  }
+}
+
+function parseNodeText(
+  node: _babel_types.Node,
+  s: MagicString | undefined,
+  context: ProcessContext,
+  offset,
+  prepend = true
+) {
+  switch (node.type) {
+    case "CallExpression": {
+      const callee = node.callee;
+      break;
+    }
+    case "Identifier": {
+      break;
+    }
+    case "MemberExpression": {
+      break;
+    }
+    case "OptionalMemberExpression": {
+      break;
+    }
+    case "LogicalExpression": {
+      break;
+    }
+    case "ObjectExpression": {
+      break;
+    }
+    case "TSSatisfiesExpression": {
+      break;
+    }
+    case "TSAsExpression": {
+      break;
+    }
+    case "TSTypeReference": {
+      break;
+    }
+    case "BinaryExpression": {
+      node.left && appendCtx(node.left, s, context, offset);
+      node.right && appendCtx(node.right, s, context, offset);
+      break;
+    }
+    case "ConditionalExpression": {
+      break;
+    }
+    case "StringLiteral": {
+      break;
+    }
+    case "NumericLiteral": {
+      break;
+    }
+    case "BooleanLiteral": {
+      break;
+    }
+    case "TemplateLiteral": {
+      break;
+    }
+    case "NullLiteral": {
+      break;
+    }
+    case "UnaryExpression": {
+      break;
+    }
+    case "ArrayExpression": {
+      break;
+    }
+    case "ArrowFunctionExpression": {
+      break;
+    }
+    case "ObjectProperty": {
+      break;
+    }
+    default: {
+      break;
+    }
+  }
+}
+
+function appendCtx(
+  node: SimpleExpressionNode | _babel_types.Expression | string,
+  s: MagicString | undefined,
+  context: ProcessContext,
+
+  /**
+   * only used for the offset when using babel
+   */
+  __offset: number = 0
+) {
+  const content = node.content ?? node.name ?? node;
+  if (
+    isGloballyAllowed(content) ||
+    ~context.ignoredIdentifiers.indexOf(content) ||
+    !context.accessor
+  )
+    return content;
+
+  if (node.type === "NumericLiteral") return content;
+
+  const accessor = context.accessor;
+
+  if (s) {
+    const start = (node.loc.start.offset ?? node.loc.start.index) + __offset;
+    const end = (node.loc.end.offset ?? node.loc.end.index) + __offset;
+    // there's a case where the offset is off
+    if (s.original.slice(start, end) !== content) {
+      s.prependRight(start + 1, `${accessor}.`);
+    } else {
+      s.prependRight(start, `${accessor}.`);
+    }
+  }
+
+  return `${accessor}.${content}`;
+}

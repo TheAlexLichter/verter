@@ -31,9 +31,8 @@ export default {
       generated: true,
       declaration: {
         name: "VUE_render",
-        content: `${
-          context.generic ? `<${context.generic},>` : ""
-        }()=> { return (\n${result}\n) }`,
+        content: `${context.generic ? `<${context.generic},>` : ""
+          }()=> { return (\n${result}\n) }`,
         type: "const",
       },
     };

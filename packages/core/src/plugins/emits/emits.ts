@@ -34,6 +34,9 @@ export default {
           name: "__emits",
           content: retrieveNodeString(expression, source) || "{}",
         },
+        applyMap(s) {
+          s.prependLeft(expression.start!, "const __emits = ");
+        }
       },
       // get the type from variable
       {
