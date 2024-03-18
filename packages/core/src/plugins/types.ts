@@ -28,7 +28,8 @@ export interface ParseScriptContext {
   template: SFCTemplateBlock | null;
 
 
-  s: MagicString
+  s: MagicString,
+
 
   // locations: LocationType[];
 }
@@ -48,6 +49,11 @@ export interface PluginOption {
     context: ParseScriptContext
   ) => WalkResult;
 
+  /**
+   * Processes the whole file
+   * @param context 
+   * @returns 
+   */
   process?: (context: ParseScriptContext) => WalkResult;
 }
 
@@ -77,6 +83,10 @@ export interface ImportItem {
 export interface BaseTypeLocation {
   type: LocationType;
   node: _babel_types.Node;
+  // holds information if it was generated from script or scriptSetup,
+  // this is necessary because when we walk the AST the babel nodes
+  // are offset to the <script> and not to the file.
+  isSetup?: boolean
 
   content?: string;
 

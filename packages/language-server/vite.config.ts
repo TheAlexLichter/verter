@@ -21,6 +21,7 @@ export default defineConfig({
         "vscode-languageserver-textdocument",
         "fs/promises",
         "path",
+        "node:path",
         'node:fs',
 
         // deps

@@ -14,6 +14,8 @@ class DocumentManager {
 
   private readonly manager = new VueDocumentManager();
 
+  private compiledDocs = new Map<string, VueDocument>()
+
   constructor() { }
 
   public listen(connection: Connection) {
@@ -85,22 +87,22 @@ class DocumentManager {
   }
 
   public getDocument(uri: string): VueDocument | undefined {
-    // if (uri.startsWith('virtual:')) {
-    //   uri = uri.replace('virtual:', "file:")
 
-    //   if (uri.endsWith('.vue.d.tsx')) {
-    //     uri = uri.replace('.vue.d.tsx', '.vue')
-    //   }
-    //   console.log('getting doc', uri)
-    // }
-    if (uri.endsWith('.vue.d.tsx')) {
-      if (uri.endsWith('.vue.d.tsx')) {
-        uri = uri.replace('.vue.d.tsx', '.vue')
+    const doc = this.#textDocuments.get(uri);
+    if (!doc) {
+      if (!uri.startsWith('virtual:')) return
+      if (this.compiledDocs.has(uri)) return this.compiledDocs.get(uri)!
+      const originalUri = uri.replace('virtual:', "file:").replace('.vue.tsx', '.vue')
+
+      const dd = this.#textDocuments.get(originalUri)
+      if (dd) {
+        const vueDoc = new VueDocument(uri, dd.getText())
+        this.compiledDocs.set(uri, vueDoc)
+        return vueDoc
       }
+
     }
-
-
-    return this.#textDocuments.get(uri);
+    return doc;
   }
 
   public getAllOpened(): string[] {

@@ -1,6 +1,6 @@
 import { parse as sfcParse, MagicString } from "@vue/compiler-sfc";
-import { parse } from "./parse";
-import { process } from "./process";
+import { parse } from "../parse/parse";
+import { process as processFn } from "./process";
 import fs from "fs";
 
 describe("process", () => {
@@ -26,6 +26,16 @@ describe("process", () => {
     const root = ast.descriptor.template!.ast!;
 
     return parse(root);
+  }
+
+  function process(parsed: ReturnType<typeof parse>) {
+    const s = new MagicString(parsed.node.source)
+
+    const r = processFn(parsed, s)
+    return {
+      ...r,
+      magicString: s
+    }
   }
 
   function wrappedInTemplate(content: string) {

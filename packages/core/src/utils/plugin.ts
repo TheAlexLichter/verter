@@ -41,8 +41,22 @@ export function* runPlugins(
                 const result = cb(plugin)?.(statement, ctx);
                 if (!result) continue;
                 if (Array.isArray(result)) {
-                    yield* result;
+
+                    for (const it of result) {
+                        if (it) {
+                            // TODO move this somewhere else, we might
+                            it.isSetup = isSetup
+                            yield it
+                        }
+
+                    }
+
+                    // // TODO move this somewhere else
+                    // result.forEach((x) => x.isSetup = isSetup)
+                    // yield* result;
                 } else {
+                    // TODO move this somewhere else
+                    result.isSetup = isSetup
                     yield result;
                 }
             }

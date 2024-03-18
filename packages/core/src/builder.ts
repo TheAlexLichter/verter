@@ -7,7 +7,7 @@ import {
   WalkResult,
 } from "./plugins/types.js";
 import type { CompilerOptions } from "@vue/compiler-core";
-import { compileScript, compileTemplate, parse } from "@vue/compiler-sfc";
+import { MagicString, compileScript, compileTemplate, parse } from "@vue/compiler-sfc";
 
 import { defaultPlugins } from "./plugins/index.js";
 import { Statement } from "@babel/types";
@@ -35,6 +35,54 @@ export function createBuilder(config?: Partial<BuilderOptions>) {
   ];
 
   return {
+    preProcess(filename: string, source: string, ignoreScript = false) {
+      const parsed = parse(source, {
+        filename,
+        ignoreEmpty: true,
+        sourceMap: true
+      });
+
+      const compiled =
+        !ignoreScript && (!!parsed.descriptor.scriptSetup || !!parsed.descriptor.script)
+          ? compileScript(parsed.descriptor, {
+            id: filename,
+            genDefaultAs: "____VERTER_COMP_OPTION__",
+            ...config?.vue?.compiler,
+            sourceMap: false
+          })
+          : null;
+
+      const context = {
+        filename,
+        id: filename,
+        isSetup: Boolean(compiled?.setup),
+        sfc: parsed,
+        script: compiled,
+        generic: compiled?.attrs.generic,
+        template: parsed.descriptor.template,
+        s: new MagicString(source)
+      } satisfies ParseScriptContext;
+
+      // if (!context.script) throw new Error("No script found");
+
+      // create a map
+      const locations = [
+        ...processPlugins(plugins, context),
+        ...walkPlugins(plugins, context),
+      ].reduce((prev, curr) => {
+        if (!curr) return prev;
+        const type = curr.type;
+        if (!prev[type]) prev[type] = [];
+        prev[type]!.push(curr);
+        return prev;
+      }, {} as Record<LocationType, TypeLocation[]>) as unknown as LocationByType;
+
+      return {
+        locations,
+        context
+      }
+    },
+
     process(filename: string, source: string) {
       const parsed = parse(source, {
         filename,
@@ -59,6 +107,7 @@ export function createBuilder(config?: Partial<BuilderOptions>) {
         script: compiled,
         generic: compiled?.attrs.generic,
         template: parsed.descriptor.template,
+        s: new MagicString(source)
       } satisfies ParseScriptContext;
 
       // if (!context.script) throw new Error("No script found");

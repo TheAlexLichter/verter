@@ -7,9 +7,8 @@ import {
   WalkResult,
 } from "../types.js";
 
-import { parse } from "./parse.js";
-// import { build } from "./builder.js";
-import { process } from "./process.js";
+import { parse } from "./parse";
+import { process } from "./process";
 
 export default {
   name: "Template",
@@ -19,31 +18,27 @@ export default {
     if (!template) return;
 
     const ast = template.ast;
-    const source = template.content;
 
     if (!ast) return;
 
     const parsed = parse(ast);
     const declarations = [];
     // const result = build(parsed, [], declarations);
-    const { magicString } = process(parsed, true);
+    process(parsed, context.s, false);
 
 
-    return {
+    return [{
       type: LocationType.Template,
-      node: ast,
-      content: magicString.toString(),
-      map: magicString.generateMap({ hires: true, includeContent: true }),
-    };
+      node: parsed.node,
+    }];
     return {
       type: LocationType.Template,
       node: ast,
       generated: true,
       declaration: {
         name: "VUE_render",
-        content: `${
-          context.generic ? `<${context.generic},>` : ""
-        }()=> { return (\n${result}\n) }`,
+        content: `${context.generic ? `<${context.generic},>` : ""
+          }()=> { return (\n${result}\n) }`,
         type: "const",
       },
     };

@@ -1,7 +1,7 @@
 import { MagicString } from "@vue/compiler-sfc";
-import { WalkResult } from "../types";
-import { ParsedType, parse } from "./parse";
-import type { ParsedNodeBase } from "./parse";
+import { WalkResult } from "../../types";
+import { ParsedType, parse } from "../parse/parse";
+import type { ParsedNodeBase } from "../parse/parse";
 import {
   AttributeNode,
   ComponentNode,
@@ -35,6 +35,7 @@ interface ProcessContext {
 
 export function process(
   parsed: ReturnType<typeof parse>,
+  s: MagicString,
   overrideTemplate = false,
   context: ProcessContext = {
     ignoredIdentifiers: [],
@@ -43,8 +44,6 @@ export function process(
     componentAccessor: "___VERTER__comp",
   }
 ) {
-  const s = new MagicString(parsed.node.source);
-
   renderChildren(parsed.children, s, context);
 
   // clean <template> tag
@@ -52,7 +51,7 @@ export function process(
     const firstChild = parsed.node.children[0];
     const lastChild = parsed.node.children[parsed.node.children.length - 1];
     s.overwrite(
-      0,//parsed.node.loc.start.offset,
+      parsed.node.loc.start.offset,
       firstChild.loc.start.offset,
       "(\n<>\n"
     );
@@ -62,8 +61,6 @@ export function process(
       parsed.node.loc.end.offset + parsed.node.source.length,
       "\n</>\n)"
     );
-
-    s.appendLeft(0, '/* @jsxImportSource vue */\n')
   }
 
   return {
@@ -380,9 +377,9 @@ function renderFor(
 
   const indexString = index
     ? retriveStringExpressionNode(index, undefined, {
-        ...context,
-        ignoredIdentifiers,
-      })
+      ...context,
+      ignoredIdentifiers,
+    })
     : "";
 
   // TODO content
@@ -513,9 +510,9 @@ function renderCondition(
     const lastChild =
       lastCondition.children[lastCondition.children.length - 1]?.type === "for"
         ? lastCondition.children[lastCondition.children.length - 1]?.children[
-            lastCondition.children[lastCondition.children.length - 1]?.children
-              .length - 1
-          ]
+        lastCondition.children[lastCondition.children.length - 1]?.children
+          .length - 1
+        ]
         : lastCondition.children[lastCondition.children.length - 1];
     const childEnd = lastChild.node.loc.end.offset;
     s.appendRight(childEnd, "}");
@@ -531,9 +528,9 @@ function renderCondition(
     const lastChild =
       condition.children[condition.children.length - 1]?.type === "for"
         ? condition.children[condition.children.length - 1]?.children[
-            condition.children[condition.children.length - 1]?.children.length -
-              1
-          ]
+        condition.children[condition.children.length - 1]?.children.length -
+        1
+        ]
         : condition.children[condition.children.length - 1];
 
     const childStart = firstChild.node.loc.start.offset;
@@ -634,9 +631,9 @@ function renderCondition(
     const lastChild =
       lastCondition.children[lastCondition.children.length - 1]?.type === "for"
         ? lastCondition.children[lastCondition.children.length - 1]?.children[
-            lastCondition.children[lastCondition.children.length - 1]?.children
-              .length - 1
-          ]
+        lastCondition.children[lastCondition.children.length - 1]?.children
+          .length - 1
+        ]
         : lastCondition.children[lastCondition.children.length - 1];
     const childEnd = lastChild.node.loc.end.offset;
     s.prependRight(childEnd, " : undefined");

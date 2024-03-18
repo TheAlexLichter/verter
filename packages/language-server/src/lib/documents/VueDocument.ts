@@ -3,12 +3,14 @@ import { basename } from "path";
 import { WritableDocument } from "./Document";
 import { urlToPath } from "../../utils";
 import { importVueCompiler } from "../../importPackages";
-import { TemplateBuilder, createBuilder } from "@verter/core";
 import { ParseScriptContext } from "@verter/core/src/plugins";
 import { BulkRegistration } from "vscode-languageserver";
 import { MagicString } from "vue/compiler-sfc";
 
 import { SourceMapConsumer } from 'source-map-js'
+
+import { createBuilder, mergeFull } from "@verter/core";
+
 
 export class VueDocument extends WritableDocument {
   languageId = "vue";
@@ -77,28 +79,41 @@ export class VueDocument extends WritableDocument {
       },
     });
 
+
+    const { locations, context } = createBuilder().preProcess(name, this.content, true)
+
+    const result = mergeFull(locations, context)
+
+    this.template = {
+      content: result.content,
+      map: result.map,
+      mapConsumer: new SourceMapConsumer(result.map!)
+    }
+
+
+
     // console.log("");
     // Template.process({
 
     // })
 
-    const context = {
-      filename: name,
-      id: this._uri,
-      isSetup: false, //Boolean(compiled?.setup),
-      sfc: parsed,
-      script: null, // compiled,
-      generic: undefined, //compiled?.attrs.generic,
-      template: parsed.descriptor.template,
-    } satisfies ParseScriptContext;
+    // const context = {
+    //   filename: name,
+    //   id: this._uri,
+    //   isSetup: false, //Boolean(compiled?.setup),
+    //   sfc: parsed,
+    //   script: null, // compiled,
+    //   generic: undefined, //compiled?.attrs.generic,
+    //   template: parsed.descriptor.template,
+    // } satisfies ParseScriptContext;
 
-    const { content, map } = TemplateBuilder.process(context);
+    // const { content, map } = TemplateBuilder.process(context);
 
-    this.template = {
-      content,
-      map,
-      mapConsumer: new SourceMapConsumer(map!)
-    }
+    // this.template = {
+    //   content,
+    //   map,
+    //   mapConsumer: new SourceMapConsumer(map!)
+    // }
 
     // const response = this._builder.process(name, this.content)
     // console.log('contnet', content)

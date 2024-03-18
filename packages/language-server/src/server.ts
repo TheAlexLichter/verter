@@ -81,9 +81,13 @@ export function startServer(options: LsConnectionOption = {}) {
         },
         // Tell the client that the server supports code completion
         completionProvider: {
+          // allCommitCharacters: true,
           resolveProvider: true,
+          completionItem: {
+            labelDetailsSupport: true
+          },
           triggerCharacters: [".", "@", "<"],
-        },
+        }, referencesProvider: true,
         // typeDefinitionProvider: true,
         // hoverProvider: true,
       },
@@ -134,48 +138,54 @@ export function startServer(options: LsConnectionOption = {}) {
   // connection.client.connection
 
 
+
   connection.onCompletion(async (params) => {
     if (!params.textDocument.uri.endsWith(".vue")) return null;
-    let doc = documentManager.getDocument(params.textDocument.uri);
+    const virtualUrl = params.textDocument.uri.replace('file:', 'virtual:') + '.tsx'
+    let doc = documentManager.getDocument(virtualUrl);
 
     if (doc) {
-      {
-        // const virtualUrl = params.textDocument.uri /*params.textDocument.uri.replace('file:', 'virtual:') +*/ + '.d.tsx'
-        const virtualUrl = params.textDocument.uri.replace('.vue', '.ts')
+      // {
+      //   const virtualUrl = params.textDocument.uri.replace('file:', 'virtual:') + '.tsx'
+      //   // const virtualUrl = params.textDocument.uri.replace('.vue', '.ts')
 
-        let newIndex = 8
+      //   let newIndex = 8
 
-        try {
-          const results = tsService.getCompletionsAtPosition(virtualUrl, newIndex, {
-            ...params.context,
-          })
-          console.log('got res', results?.entries.length)
-          // return results?.entries ?? []
-          if (results) {
-            return {
-              isIncomplete: true,
-              items: results.entries.map(x => {
-                return {
-                  label: x.name,
-                  kind: x.kind,
-                  data: x.data
-                }
-              })
-            }
-          }
-        } catch (e) {
-          console.error('eeee', e)
-        }
-      }
-
-
+      //   try {
+      //     const results = tsService.getCompletionsAtPosition(virtualUrl, newIndex, {
+      //       ...params.context,
+      //     })
+      //     console.log('got res', results?.entries.length)
+      //     // return results?.entries ?? []
+      //     if (results) {
+      //       return {
+      //         isIncomplete: true,
+      //         items: results.entries.map(x => {
+      //           return {
+      //             label: x.name,
+      //             kind: x.kind,
+      //             data: x.data
+      //           }
+      //         })
+      //       }
+      //     }
+      //   } catch (e) {
+      //     console.error('eeee', e)
+      //   }
+      // }
 
 
-      const content = doc._content ?? doc.content;
 
-      doc = new VueDocument(doc.uri, content)
-      const templateInfo = doc.template
+
+      // const content = doc._content ?? doc.content;
+
+      // doc = new VueDocument(doc.uri, content)
+      // const templateInfo = doc.template
       // const originalOffset = doc.offsetAt(params.position)
+
+
+      const templateInfo = doc.template
+      const content = doc.getText()
 
       const originalIndex = offsetAt(params.position, content)
 
@@ -196,25 +206,42 @@ export function startServer(options: LsConnectionOption = {}) {
 
 
 
-      // const virtualUrl = params.textDocument.uri /*params.textDocument.uri.replace('file:', 'virtual:') +*/ + '.d.tsx'
-      const virtualUrl = params.textDocument.uri.replace('.vue', '.ts')
+      let newIndex = index
 
-      let newIndex = 5
 
       try {
         const results = tsService.getCompletionsAtPosition(virtualUrl, newIndex, {
-          ...params.context,
+          triggerKind: params.context?.triggerKind,
+          // @ts-expect-error this is correct, I think
+          triggerCharacter: params.context?.triggerCharacter,
         })
-        console.log('got res', results?.entries.length)
+
+        // const b = tsService.getQuickInfoAtPosition(virtualUrl, newIndex)
+        // const c = tsService.getTypeDefinitionAtPosition(virtualUrl, newIndex)
+        // const a = tsService.getReferencesAtPosition(virtualUrl, newIndex)
+
+        // // const otherResults = tsService.getCompletionEntryDetails(virtualUrl, newIndex, 'div', undefined, '<div', undefined, undefined)
+        // // const otherResults1 = tsService.getCompletionEntrySymbol(virtualUrl, newIndex, 'div', '<div')
+        // const rrr = tsService.getDefinitionAtPosition(virtualUrl, newIndex)
+        // const aa = tsService.getReferencesAtPosition(virtualUrl, newIndex)
+        // console.log('got res', newIndex, `'${templateInfo.content.slice(index - 5, index + 5)}'`, results?.entries.length)
+        // console.log({
+        //   a, b, c, rrr, aa
+        // })
         // return results?.entries ?? []
         if (results) {
+
+          // return results
           return {
-            isIncomplete: true,
+            // ...results,
+            isIncomplete: results.isIncomplete,
+
             items: results.entries.map(x => {
               return {
+                ...x,
                 label: x.name,
                 kind: x.kind,
-                data: x.data
+                data: x.data,
               }
             })
           }
