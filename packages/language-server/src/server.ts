@@ -187,7 +187,7 @@ export function startServer(options: LsConnectionOption = {}) {
   const a = CompletionItemKind[r]
 
 
-  function mapTsCompletionToLspItem(tsCompletion: ts.CompletionEntry, data: { virtualUrl: string, index: number, triggerKind: lsp.CompletionTriggerKind | undefined, triggerCharacter: string | undefined }): CompletionItem {
+  function mapTsCompletionToLspItem(tsCompletion: ts.CompletionEntry, data: { virtualUrl: string, index: number, triggerKind: lsp.CompletionTriggerKind | undefined, triggerCharacter: string | undefined }): CompletionItem | CompletionItem[] {
     const lspItem: CompletionItem = {
       label: tsCompletion.name,
       kind: KindMap[tsCompletion.kind] || CompletionItemKind.Text,
@@ -199,6 +199,30 @@ export function startServer(options: LsConnectionOption = {}) {
       documentation: tsCompletion.source,
       data: Object.assign(data, tsCompletion.data)
     };
+
+    // TODO we should set the insert text to snippet for the template
+
+    const label = lspItem.label;
+
+    if (label.startsWith('on')) {
+      lspItem.kind = CompletionItemKind.Method
+      // convert event from onInput to @input
+      const atEvent: CompletionItem = {
+        ...lspItem,
+        label: `@${label[2].toLocaleLowerCase()}${label.slice(3)}`,
+        insertText: `${label[2].toLocaleLowerCase()}${label.slice(3)}`,
+        kind: CompletionItemKind.Method
+      }
+
+      if (data.triggerCharacter === '@') {
+        return atEvent
+      }
+      atEvent.insertText = '@' + atEvent.insertText
+      return [
+        lspItem,
+        atEvent
+      ]
+    }
 
     // if (tsCompletion.replacementSpan) {
     //   const start = tsCompletion.replacementSpan.start;
@@ -216,7 +240,9 @@ export function startServer(options: LsConnectionOption = {}) {
   connection.onCompletionResolve((item) => {
     const data: { virtualUrl: string, index: number, triggerKind: lsp.CompletionTriggerKind | undefined, triggerCharacter: string | undefined } = item.data ?? {}
 
-    const details = tsService.getCompletionEntryDetails(data.virtualUrl, data.index, item.label, undefined, undefined, undefined, item.data)
+    const label = item.label.startsWith('@') ? `on${item.label[1].toLocaleUpperCase()}${item.label.slice(2)}` : item.label;
+
+    const details = tsService.getCompletionEntryDetails(data.virtualUrl, data.index, label, undefined, undefined, undefined, item.data)
     if (!details) return item
 
     item.detail = ts.displayPartsToString(details.displayParts)
@@ -236,7 +262,7 @@ export function startServer(options: LsConnectionOption = {}) {
     const virtualUrl = params.textDocument.uri.replace('file:', 'verter-virtual:') + '.tsx'
     let doc = documentManager.getDocument(virtualUrl);
 
-    if (doc) {
+    if (doc && 'template' in doc) {
 
       const templateInfo = doc.template
       const content = doc.getText()
@@ -258,16 +284,13 @@ export function startServer(options: LsConnectionOption = {}) {
       }, templateInfo.content)
 
 
-
-
-      let newIndex = index
-
+      let newIndex = params.context?.triggerCharacter === '@' || content[originalIndex - 1] === '@' ? index - 1 : index
 
       try {
         const results = tsService.getCompletionsAtPosition(virtualUrl, newIndex, {
           triggerKind: params.context?.triggerKind,
           // @ts-expect-error this is correct, I think
-          triggerCharacter: params.context?.triggerCharacter,
+          triggerCharacter: params.context?.triggerCharacter === '@' ? '' : params.context?.triggerCharacter,
         })
 
         const b = tsService.getQuickInfoAtPosition(virtualUrl, newIndex)
@@ -290,7 +313,17 @@ export function startServer(options: LsConnectionOption = {}) {
             // ...results,
             isIncomplete: results.isIncomplete,
 
-            items: results.entries.flatMap(x => mapTsCompletionToLspItem(x, {
+            items: results.entries.filter(x => {
+              switch (params.context?.triggerCharacter) {
+                case '@': {
+                  return x.name.startsWith('on')
+                }
+                // case ':': 
+              }
+
+              return true
+
+            }).flatMap(x => mapTsCompletionToLspItem(x, {
               virtualUrl,
               index: index,
               triggerKind: params.context?.triggerKind,
