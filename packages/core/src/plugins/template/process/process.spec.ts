@@ -51,7 +51,7 @@ describe("process", () => {
       `"<template><div>{ "Hello vue" }</div></template>"`
     );
     expect(magicString.generateMap().toString()).toMatchInlineSnapshot(
-      `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,WAAW,GAAG,CAAC,eAAS,EAAE,GAAG"}"`
+      `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,eAAe,eAAS,EAAE,GAAG"}"`
     );
   });
 
@@ -91,7 +91,7 @@ describe("process", () => {
         `"<template><___VERTER__comp.MyComponent foo={___VERTER__ctx.bar}/></template>"`
       );
       expect(magicString.generateMap().toString()).toMatchInlineSnapshot(
-        `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,2BAAW,WAAY,CAAE,IAAI,eAAC,GAAG,CAAC"}"`
+        `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,2BAAW,WAAY,CAAE,IAAI,gBAAC,GAAG,CAAC"}"`
       );
     });
 
@@ -105,7 +105,7 @@ describe("process", () => {
         `"<template><___VERTER__comp.MyComponent foo={___VERTER__ctx.bar}/></template>"`
       );
       expect(magicString.generateMap().toString()).toMatchInlineSnapshot(
-        `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,2BAAW,WAAY,CAAQ,IAAI,eAAC,GAAG,CAAC"}"`
+        `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,2BAAW,WAAY,CAAQ,IAAI,gBAAC,GAAG,CAAC"}"`
       );
     });
 
@@ -119,7 +119,7 @@ describe("process", () => {
         `"<template><___VERTER__comp.MyComponent {...___VERTER__ctx.bar}/></template>"`
       );
       expect(magicString.generateMap().toString()).toMatchInlineSnapshot(
-        `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,2BAAW,WAAY,CAAQ,CAAP,iBAAQ,GAAG,CAAC"}"`
+        `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,2BAAW,WAAY,CAAQ,CAAP,kBAAQ,GAAG,CAAC"}"`
       );
     });
 
@@ -133,7 +133,7 @@ describe("process", () => {
         `"<template><___VERTER__comp.MyComponent bind={___VERTER__ctx.bar}/></template>"`
       );
       expect(magicString.generateMap().toString()).toMatchInlineSnapshot(
-        `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,2BAAW,WAAY,CAAE,KAAK,eAAC,GAAG,CAAC"}"`
+        `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,2BAAW,WAAY,CAAE,KAAK,gBAAC,GAAG,CAAC"}"`
       );
     });
 
@@ -161,7 +161,7 @@ describe("process", () => {
         `"<template><___VERTER__comp.MyComponent bind={___VERTER__ctx.bar}/></template>"`
       );
       expect(magicString.generateMap().toString()).toMatchInlineSnapshot(
-        `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,2BAAW,WAAY,CAAQ,KAAK,eAAC,GAAG,CAAC"}"`
+        `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,2BAAW,WAAY,CAAQ,KAAK,gBAAC,GAAG,CAAC"}"`
       );
     });
 
@@ -175,7 +175,7 @@ describe("process", () => {
         `"<template><___VERTER__comp.MyComponent {...___VERTER__ctx.bar} foo="bar"/></template>"`
       );
       expect(magicString.generateMap().toString()).toMatchInlineSnapshot(
-        `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,2BAAW,WAAY,CAAQ,CAAP,iBAAQ,GAAG,CAAC"}"`
+        `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,2BAAW,WAAY,CAAQ,CAAP,kBAAQ,GAAG,CAAC"}"`
       );
     });
 
@@ -190,7 +190,7 @@ describe("process", () => {
       );
 
       expect(magicString.generateMap().toString()).toMatchInlineSnapshot(
-        `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,2BAAW,WAAY,WAAkB,CAAP,iBAAQ,GAAG,CAAC"}"`
+        `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,2BAAW,WAAY,WAAkB,CAAP,kBAAQ,GAAG,CAAC"}"`
       );
     });
 
@@ -220,7 +220,7 @@ describe("process", () => {
       );
 
       expect(magicString.generateMap().toString()).toMatchInlineSnapshot(
-        `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,WAAW,IAAI"}"`
+        `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA"}"`
       );
     });
 
@@ -234,7 +234,7 @@ describe("process", () => {
       );
 
       expect(magicString.generateMap().toString()).toMatchInlineSnapshot(
-        `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,WAAW,IAAI,6BAA6B,IAAI"}"`
+        `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,4CAA4C,IAAI"}"`
       );
     });
     it('should camelCase "on" event listeners', () => {
@@ -247,7 +247,7 @@ describe("process", () => {
       );
 
       expect(magicString.generateMap().toString()).toMatchInlineSnapshot(
-        `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,WAAW,IAAI,CAAC,EAAC,iBAAmB,CAAC,eAAC,IAAI,CAAC,GAAG,IAAI"}"`
+        `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,gBAAgB,EAAC,iBAAmB,CAAC,gBAAC,IAAI,CAAC,GAAG,IAAI"}"`
       );
     });
 
@@ -261,7 +261,7 @@ describe("process", () => {
       );
 
       expect(magicString.generateMap().toString()).toMatchInlineSnapshot(
-        `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,WAAW,IAAI,CAAE,UAAW,CAAC,eAAC,IAAI,CAAC,GAAG,IAAI"}"`
+        `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,gBAAiB,UAAW,CAAC,gBAAC,IAAI,CAAC,GAAG,IAAI"}"`
       );
     });
 
@@ -285,7 +285,7 @@ describe("process", () => {
       );
 
       expect(magicString.generateMap().toString()).toMatchInlineSnapshot(
-        `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,WAAW,IAAI,eAAe,IAAI"}"`
+        `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,8BAA8B,IAAI"}"`
       );
     });
 
@@ -299,7 +299,7 @@ describe("process", () => {
       );
 
       expect(magicString.generateMap().toString()).toMatchInlineSnapshot(
-        `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,WAAW,IAAI,wBAAwB,IAAI"}"`
+        `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,uCAAuC,IAAI"}"`
       );
     });
 
@@ -313,7 +313,7 @@ describe("process", () => {
       );
 
       expect(magicString.generateMap().toString()).toMatchInlineSnapshot(
-        `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,WAAW,IAAI,eAAe,IAAI"}"`
+        `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,8BAA8B,IAAI"}"`
       );
     });
 
@@ -329,7 +329,7 @@ describe("process", () => {
           );
 
           expect(magicString.generateMap().toString()).toMatchInlineSnapshot(
-            `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,WAAc,UAAM,eAAS,KAAJ,EAAJ,IAAa,IAAxB,CAAC,EAAE,CAAsB,GAAG,EAAE,IAAC"}"`
+            `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,WAAc,UAAM,gBAAS,KAAJ,EAAJ,IAAa,IAAxB,IAAyB,GAAG,EAAE,IAAC"}"`
           );
 
           testSourceMaps(
@@ -348,7 +348,7 @@ describe("process", () => {
           );
 
           expect(magicString.generateMap().toString()).toMatchInlineSnapshot(
-            `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,WAAc,UAAM,eAAgB,KAAJ,EAAX,WAAoB,IAA/B,CAAC,EAAE,CAA6B,GAAG,EAAE,IAAC"}"`
+            `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,WAAc,UAAM,gBAAgB,KAAJ,EAAX,WAAoB,IAA/B,IAAgC,GAAG,EAAE,IAAC"}"`
           );
         });
 
@@ -362,7 +362,7 @@ describe("process", () => {
           );
 
           expect(magicString.generateMap().toString()).toMatchInlineSnapshot(
-            `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,WAAc,UAAM,eAAkB,KAAJ,CAAb,aAAsB,GAAjC,CAAC,EAAE,CAA+B,GAAG,EAAE,IAAC"}"`
+            `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,WAAc,UAAM,gBAAkB,KAAJ,CAAb,aAAsB,GAAjC,IAAkC,GAAG,EAAE,IAAC"}"`
           );
         });
 
@@ -376,7 +376,7 @@ describe("process", () => {
           );
 
           expect(magicString.generateMap().toString()).toMatchInlineSnapshot(
-            `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,WAAc,UAAM,eAAkB,KAAJ,CAAb,aAAsB,GAAjC,CAAC,EAAE,CAA+B,CAAE,IAAI,CAAC,gBAAgB,CAAC,GAAG,EAAE,IAAC"}"`
+            `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,WAAc,UAAM,gBAAkB,KAAJ,CAAb,aAAsB,GAAjC,IAAkC,CAAE,IAAI,CAAC,gBAAgB,CAAC,GAAG,EAAE,IAAC"}"`
           );
         });
 
@@ -390,7 +390,7 @@ describe("process", () => {
           );
 
           expect(magicString.generateMap().toString()).toMatchInlineSnapshot(
-            `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,WAAc,UAAM,eAAyB,KAAJ,CAApB,oBAA6B,GAAxC,CAAC,EAAE,CAAsC,GAAG,EAAE,IAAC"}"`
+            `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,WAAc,UAAM,gBAAyB,KAAJ,CAApB,oBAA6B,GAAxC,IAAyC,GAAG,EAAE,IAAC"}"`
           );
         });
 
@@ -408,7 +408,7 @@ describe("process", () => {
           `);
 
           expect(magicString.generateMap().toString()).toMatchInlineSnapshot(
-            `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,WAAc,UAAM,eAAS,KAAJ,EAAJ,IAAa,IAAxB,CAAC,EAAE,CAAsB;AACnC,OAAY,UAAM,CAAc,aAAJ,EAAT,SAA0B,IAAvC,CAAC,IAAI,CAAmC,GAAG,IAAI,IAAC;AACtD,IAAI,EAAE,IAAC"}"`
+            `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,WAAc,UAAM,gBAAS,KAAJ,EAAJ,IAAa,IAAxB,IAAyB;AACnC,OAAY,UAAM,CAAc,aAAJ,EAAT,SAA0B,IAAvC,MAAwC,GAAG,IAAI,IAAC;AACtD,IAAI,EAAE,IAAC"}"`
           );
         });
 
@@ -422,7 +422,7 @@ describe("process", () => {
           );
 
           expect(magicString.generateMap().toString()).toMatchInlineSnapshot(
-            `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,WAAc,UAAM,eAAS,KAAJ,EAAJ,IAAa,IAAxB,CAAC,EAAE,CAAsB,GAAG,EAAE,IAAC"}"`
+            `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,WAAc,UAAM,gBAAS,KAAJ,EAAJ,IAAa,IAAxB,IAAyB,GAAG,EAAE,IAAC"}"`
           );
         });
 
@@ -436,7 +436,7 @@ describe("process", () => {
           );
 
           expect(magicString.generateMap().toString()).toMatchInlineSnapshot(
-            `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,WAAc,UAAM,eAAW,KAAJ,EAAN,MAAe,IAA1B,CAAC,EAAE,CAAwB,GAAG,EAAE,IAAC"}"`
+            `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,WAAc,UAAM,gBAAW,KAAJ,EAAN,MAAe,IAA1B,IAA2B,GAAG,EAAE,IAAC"}"`
           );
         });
 
@@ -450,7 +450,7 @@ describe("process", () => {
           );
 
           expect(magicString.generateMap().toString()).toMatchInlineSnapshot(
-            `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,WAAc,UAAM,CAAW,kBAAI,KAAR,EAAN,MAAmB,IAA9B,CAAC,EAAE,CAA4B,GAAG,EAAE,IAAC"}"`
+            `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,WAAc,UAAM,CAAW,mBAAI,KAAR,EAAN,MAAmB,IAA9B,IAA+B,GAAG,EAAE,IAAC"}"`
           );
         });
 
@@ -465,7 +465,7 @@ describe("process", () => {
           );
 
           expect(magicString.generateMap().toString()).toMatchInlineSnapshot(
-            `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,WAAc,UAAM,eAAU,QAAJ,EAAL,KAAiB,IAA5B,CAAC,EAAE,CAA0B,GAAG,EAAE,IAAC"}"`
+            `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,WAAc,UAAM,gBAAU,QAAJ,EAAL,KAAiB,IAA5B,IAA6B,GAAG,EAAE,IAAC"}"`
           );
         });
 
@@ -479,7 +479,7 @@ describe("process", () => {
           );
 
           expect(magicString.generateMap().toString()).toMatchInlineSnapshot(
-            `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,WAAc,UAAM,eAAiB,QAAJ,CAAZ,YAAwB,GAAnC,CAAC,EAAE,CAAiC,GAAG,EAAE,IAAC"}"`
+            `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,WAAc,UAAM,gBAAiB,QAAJ,CAAZ,YAAwB,GAAnC,IAAoC,GAAG,EAAE,IAAC"}"`
           );
         });
 
@@ -493,7 +493,7 @@ describe("process", () => {
           );
 
           expect(magicString.generateMap().toString()).toMatchInlineSnapshot(
-            `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,WAAc,UAAM,eAAwB,QAAJ,CAAnB,mBAA+B,GAA1C,CAAC,EAAE,CAAwC,GAAG,EAAE,IAAC"}"`
+            `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,WAAc,UAAM,gBAAwB,QAAJ,CAAnB,mBAA+B,GAA1C,IAA2C,GAAG,EAAE,IAAC"}"`
           );
         });
 
@@ -508,7 +508,7 @@ describe("process", () => {
           );
 
           expect(magicString.generateMap().toString()).toMatchInlineSnapshot(
-            `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,WAAc,UAAM,CAAM,EAAJ,EAAD,CAAO,IAAlB,CAAC,EAAE,CAAgB,GAAG,EAAE,IAAC"}"`
+            `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,WAAc,UAAM,CAAM,EAAJ,EAAD,CAAO,IAAlB,IAAmB,GAAG,EAAE,IAAC"}"`
           );
         });
 
@@ -523,7 +523,7 @@ describe("process", () => {
           );
 
           expect(magicString.generateMap().toString()).toMatchInlineSnapshot(
-            `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,WAAsC,eAAC,SAAS,CAAf,CAAnB,UAAM,eAAM,KAAJ,EAAD,CAAU,IAArB,CAAC,EAAE,CAAmB,CAAiB,GAAG,EAAE,gBAAC"}"`
+            `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,WAAsC,gBAAC,SAAS,CAAf,CAAnB,UAAM,gBAAM,KAAJ,EAAD,CAAU,IAArB,IAAsB,CAAiB,GAAG,EAAE,gBAAC"}"`
           );
 
           testSourceMaps(
@@ -543,7 +543,7 @@ describe("process", () => {
           );
 
           expect(magicString.generateMap().toString()).toMatchInlineSnapshot(
-            `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,WAAmB,eAAC,KAAK,CAAX,CAAJ,CAAC,EAAE,CAAa,GAAG,EAAE,cAAC"}"`
+            `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,WAAmB,gBAAC,KAAK,CAAX,CAAJ,IAAgB,GAAG,EAAE,cAAC"}"`
           );
         });
 
@@ -556,7 +556,7 @@ describe("process", () => {
           );
 
           expect(magicString.generateMap().toString()).toMatchInlineSnapshot(
-            `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,WAAmB,eAAC,KAAK,CAAX,CAAJ,CAAC,EAAE,CAAa,WAAW,EAAE,CAAK,CAAJ,CAAC,EAAE,CAAO,aAAa,EAAE,EAAC"}"`
+            `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,WAAmB,gBAAC,KAAK,CAAX,CAAJ,IAAgB,WAAW,EAAE,CAAK,CAAJ,IAAU,aAAa,EAAE,EAAC"}"`
           );
         });
 
@@ -569,7 +569,7 @@ describe("process", () => {
           );
 
           expect(magicString.generateMap().toString()).toMatchInlineSnapshot(
-            `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,WAAmB,eAAC,KAAK,CAAX,CAAJ,CAAC,EAAE,CAAa,GAAG,EAAE,CAAe,gBAAC,KAAK,CAAhB,CAAJ,CAAC,EAAE,CAAkB,GAAG,EAAE,cAAC"}"`
+            `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,WAAmB,gBAAC,KAAK,CAAX,CAAJ,IAAgB,GAAG,EAAE,CAAe,iBAAC,KAAK,CAAhB,CAAJ,IAAqB,GAAG,EAAE,cAAC"}"`
           );
         });
 
@@ -596,7 +596,7 @@ describe("process", () => {
           `);
 
           expect(magicString.generateMap().toString()).toMatchInlineSnapshot(
-            `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA;AACA,eAAuB,eAAC,OAAO,CAAb,CAAJ,CAAC,EAAE,CAAe,GAAG,EAAE;AACrC,cAA4B,gBAAC,OAAO,CAAlB,CAAJ,CAAC,EAAE,CAAoB,GAAG,EAAE;AAC1C,cAA4B,gBAAC,OAAO,CAAlB,CAAJ,CAAC,EAAE,CAAoB,GAAG,EAAE;AAC1C,cAA4B,gBAAC,OAAO,CAAlB,CAAJ,CAAC,EAAE,CAAoB,GAAG,EAAE;AAC1C,cAA4B,gBAAC,OAAO,CAAlB,CAAJ,CAAC,EAAE,CAAoB,GAAG,EAAE;AAC1C,cAA4B,gBAAC,OAAO,CAAlB,CAAJ,CAAC,EAAE,CAAoB,GAAG,EAAE;AAC1C,cAAkB,CAAJ,CAAC,EAAE,CAAO,GAAG,EAAE,EAAC"}"`
+            `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA;AACA,eAAuB,gBAAC,OAAO,CAAb,CAAJ,IAAkB,GAAG,EAAE;AACrC,cAA4B,iBAAC,OAAO,CAAlB,CAAJ,IAAuB,GAAG,EAAE;AAC1C,cAA4B,iBAAC,OAAO,CAAlB,CAAJ,IAAuB,GAAG,EAAE;AAC1C,cAA4B,iBAAC,OAAO,CAAlB,CAAJ,IAAuB,GAAG,EAAE;AAC1C,cAA4B,iBAAC,OAAO,CAAlB,CAAJ,IAAuB,GAAG,EAAE;AAC1C,cAA4B,iBAAC,OAAO,CAAlB,CAAJ,IAAuB,GAAG,EAAE;AAC1C,cAAkB,CAAJ,IAAU,GAAG,EAAE,EAAC"}"`
           );
         });
 
@@ -624,7 +624,7 @@ describe("process", () => {
           );
 
           expect(magicString.generateMap().toString()).toMatchInlineSnapshot(
-            `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,WAAoB,CAAC;AACrB;AACA;AACA,cAAc,CAHC,CAAL,CAAC,GAAG,CAGC,CAAC,aAEN,EAAE,GAAG;AACf,UAAe,CAAL,CAAC,GAAG,CAAO,CAAC,YAEZ,EAAE,GAAG,EAAC"}"`
+            `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,WAAoB,CAAC;AACrB;AACA;AACA,cAAc,CAHC,CAAL,KAGK,CAAC,aAEN,EAAE,GAAG;AACf,UAAe,CAAL,KAAW,CAAC,YAEZ,EAAE,GAAG,EAAC"}"`
           );
         });
 
@@ -724,7 +724,7 @@ describe("process", () => {
           );
 
           expect(magicString.generateMap().toString()).toMatchInlineSnapshot(
-            `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,WAAW,GAAG,CAAQ,CAAP,iBAAQ,KAAK,CAAC"}"`
+            `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,eAAsB,CAAP,kBAAQ,KAAK,CAAC"}"`
           );
         });
         it("v-bind name", () => {
@@ -737,7 +737,7 @@ describe("process", () => {
           );
 
           expect(magicString.generateMap().toString()).toMatchInlineSnapshot(
-            `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,WAAW,GAAG,CAAQ,KAAK,eAAC,KAAK,CAAC"}"`
+            `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,eAAsB,KAAK,gBAAC,KAAK,CAAC"}"`
           );
         });
 
@@ -750,7 +750,7 @@ describe("process", () => {
           );
 
           expect(magicString.generateMap().toString()).toMatchInlineSnapshot(
-            `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,WAAW,GAAG,CAAE,IAAD,qBAAK"}"`
+            `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,eAAgB,IAAD,sBAAK"}"`
           );
         });
 
@@ -764,7 +764,7 @@ describe("process", () => {
           );
 
           expect(magicString.generateMap().toString()).toMatchInlineSnapshot(
-            `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,WAAW,GAAG,CAAE,KAAK,eAAC,IAAI,CAAC"}"`
+            `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,eAAgB,KAAK,gBAAC,IAAI,CAAC"}"`
           );
         });
       });
@@ -951,7 +951,7 @@ describe("process", () => {
       const parsed = doParseContent(source);
       const { magicString } = process(parsed);
       expect(magicString.toString()).toMatchInlineSnapshot(
-        `"<template><div>{{ foo}}</div></template>"`
+        `"<template><div>{ ___VERTER__ctx.foo}</div></template>"`
       );
     });
 

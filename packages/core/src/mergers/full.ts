@@ -53,22 +53,6 @@ export function mergeFull(
     }
   }
 
-  {
-    // move template to the bottom
-    const templateIndex = blocks.findIndex((x) => x.block.type === "template");
-    if (
-      templateIndex >= 0 &&
-      templateIndex < blocks.findIndex((x) => x.block.type === "script")
-    ) {
-      const template = blocks[templateIndex];
-      s.move(
-        template.tag.pos.open.start,
-        template.tag.pos.close.end,
-        source.length
-      );
-    }
-  }
-
   // if is setup, there's a change to have 2 script tags
   // we need to bring the non-setup to the top
   if (isSetup) {
@@ -78,6 +62,25 @@ export function mergeFull(
       if (firstBlock.block.attrs.setup === true) {
         s.move(firstBlock.tag.pos.open.start, firstBlock.tag.pos.close.end, 0);
       }
+    }
+  }
+
+  {
+    // move template to before </script>
+    // this is better because we can use the component funciton generic
+    // to fix some of the types
+    const templateIndex = blocks.findIndex((x) => x.block.type === "template");
+    if (templateIndex >= 0) {
+      const templateBlock = blocks[templateIndex];
+      const endScriptIndex = (
+        sfc.descriptor.scriptSetup ?? sfc.descriptor.script
+      )?.loc.end.offset;
+
+      s.move(
+        templateBlock.tag.pos.open.start,
+        templateBlock.tag.pos.close.end,
+        endScriptIndex
+      );
     }
   }
 

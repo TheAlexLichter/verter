@@ -343,7 +343,7 @@ describe("Mergers Full", () => {
         testSourceMaps(p);
       });
 
-      it.only("should handle generic on the template", () => {
+      it("should handle generic on the template", () => {
         const source = `<script lang="ts" generic="T extends string = 'foo'">
         import { ref } from 'vue'
 
@@ -365,8 +365,87 @@ describe("Mergers Full", () => {
         `;
         const p = process(source);
         expect(p.source).toBe(source);
-        expect(p.content).toMatchInlineSnapshot();
+        expect(p.content).toMatchInlineSnapshot(`
+          "import { defineComponent as ___VERTER_defineComponent } from 'vue';
+          import { ref } from 'vue'
+          function ___VERTER_COMPONENT__<T extends string = 'foo'>() {
+
+                  
+
+                  const ____VERTER_COMP_OPTION__ = {
+                      name: 'test',
+
+                      data(){ 
+                          return {
+                              foo: 'foo' as T
+                          }
+                      }
+                  }
+                  function ___VERTER__TEMPLATE_RENDER() {
+          <>
+                      <div>
+                          { ___VERTER__ctx.foo + 'aa' as T}
+                      </div>
+                  
+          </>}
+          }
+
+                  
+                  "
+        `);
         testSourceMaps(p);
+      });
+
+      it.only("should handle more complex generic on the template", () => {
+        const source = `<script lang="ts" generic="T extends string & { supa?: () => number } = 'foo'">
+        import { ref } from 'vue'
+
+        export default {
+            name: 'test',
+
+            data(){ 
+                return {
+                    foo: 'foo' as T
+                }
+            }
+        }
+        </script>
+        <template>
+            <div>
+                {{ (foo + 'aa' as typeof foo).supa?.()}}
+            </div>
+        </template>
+        `;
+        const p = process(source);
+        expect(p.source).toBe(source);
+        expect(p.content).toMatchInlineSnapshot(`
+          "import { defineComponent as ___VERTER_defineComponent } from 'vue';
+          import { ref } from 'vue'
+          function ___VERTER_COMPONENT__<T extends string & { supa?: () => number } = 'foo'>() {
+
+                  
+
+                  const ____VERTER_COMP_OPTION__ = {
+                      name: 'test',
+
+                      data(){ 
+                          return {
+                              foo: 'foo' as T
+                          }
+                      }
+                  }
+                  function ___VERTER__TEMPLATE_RENDER() {
+          <>
+                      <div>
+                          { (___VERTER__ctx.foo + 'aa' as typeof ___VERTER__ctx.foo).supa?.()}
+                      </div>
+                  
+          </>}
+          }
+
+                  
+                  "
+        `);
       });
     });
   });

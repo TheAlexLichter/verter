@@ -732,31 +732,6 @@ function renderInterpolation(
   // process the content
 
   retrieveStringExpressionNode(interpolationNode.content, s, context);
-
-  // if (interpolationNode.content.ast) {
-
-  // } else {
-  //   appendCtx(
-  //     interpolationNode.content,
-  //     s,
-  //     context,
-  //     // interpolationNode.loc.start.offset
-  //   );
-  // }
-
-  // if (true) {
-  //   const g = node.node.content.ast
-  //     ? generateNodeText(node.node.content.ast)
-  //     : appendCtx(node.node.content.content);
-
-  //   if (g !== `_ctx.${node.node.content.content}`) {
-  //     const r = generateNodeText(node.node.content.ast);
-  //   }
-  //   const n = node.node as InterpolationNode;
-
-  //   return `{ ${g} }`;
-  // }
-  // return `{ ${node.content?.content} }`;
 }
 
 function resolveComponentTag(
@@ -808,7 +783,8 @@ function retrieveStringExpressionNode(
       }
       const offset =
         overrideOffset >= 0 ? overrideOffset : node.loc.start.offset;
-      return parseNodeText(node.ast, s, context, offset, prepend);
+      // -2 is magic offset :thinking:
+      return parseNodeText(node.ast, s, context, offset - 2, prepend);
     }
     case NodeTypes.COMPOUND_EXPRESSION: {
       return "NOT_KNOWN COMPOUND_EXPRESSION";
@@ -828,8 +804,20 @@ function parseNodeText(
   offset: number,
   prepend = true
 ) {
-  if (offset > 0) {
-    --offset;
+  // if (offset > 0) {
+  //   --offset;
+  // }
+
+  if ("expression" in node) {
+    node.expression && appendCtx(node.expression, s, context, offset);
+  }
+
+  if ("callee" in node) {
+    node.callee && parseNodeText(node.callee, s, context, offset, prepend);
+  }
+
+  if ("exprName" in node) {
+    node.exprName && parseNodeText(node.exprName, s, context, offset, prepend);
   }
 
   switch (node.type) {
@@ -838,9 +826,13 @@ function parseNodeText(
       break;
     }
     case "Identifier": {
+      appendCtx(node, s, context, offset);
       break;
     }
     case "MemberExpression": {
+      node.object &&
+        parseNodeText(node.object, s, context, node.object.start - 1 + offset);
+      // node.property && appendCtx(node.property, s, context, offset);
       break;
     }
     case "OptionalMemberExpression": {
@@ -856,6 +848,8 @@ function parseNodeText(
       break;
     }
     case "TSAsExpression": {
+      node.typeAnnotation &&
+        parseNodeText(node.typeAnnotation, s, context, offset);
       break;
     }
     case "TSTypeReference": {

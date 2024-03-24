@@ -410,6 +410,50 @@ describe('Utils SFC', () => {
                 }
             ])
         })
+
+
+        // TODO fix resolving empty when there's `>`
+        it.skip('with complex generic', ()=> {
+            const source = `<script lang="ts" generic="T extends string & { supa?: () => number } = 'foo'">
+            </script>
+            <template>
+            </template>
+            `
+
+            const result = doExtract(source)
+
+
+            expect(result).toMatchObject([
+                {
+                    block: {
+                        type: 'script',
+                        loc: {
+                            start: {
+                                offset: 58
+                            },
+                            end: {
+                                offset: 100
+                            }
+                        }
+                    },
+                    tag: {
+                        type: 'script',
+                        content: '',
+                        pos: {
+                            open: { start: 50, end: 58 },
+                            close: {
+                                start: 100,
+                                end: 109
+                            },
+                            content: {
+                                start: 57,
+                                end: 57
+                            }
+                        },
+                    }
+                }
+            ]);
+        })
     })
 
 
