@@ -115,7 +115,7 @@ describe("Mergers Full", () => {
   });
 
   describe("test", () => {
-    describe.only("script", () => {
+    describe("script", () => {
       it("should generate default option", () => {
         const source = `<script></script>`;
 
@@ -124,7 +124,11 @@ describe("Mergers Full", () => {
         expect(p.content).toMatchInlineSnapshot(
           `
           "import { defineComponent as ___VERTER_defineComponent } from 'vue';
-          const ____VERTER_COMP_OPTION__ = {};"
+
+          function ___VERTER_COMPONENT__() {
+          const ____VERTER_COMP_OPTION__ = {};
+          }
+          "
         `
         );
         testSourceMaps(p);
@@ -140,8 +144,12 @@ describe("Mergers Full", () => {
         expect(p.content).toMatchInlineSnapshot(`
           "import { defineComponent as ___VERTER_defineComponent } from 'vue';
 
+          function ___VERTER_COMPONENT__() {
+
                           const ____VERTER_COMP_OPTION__ = {}
-                          "
+                          
+          }
+          "
         `);
       });
 
@@ -163,6 +171,8 @@ describe("Mergers Full", () => {
         expect(p.content).toMatchInlineSnapshot(`
           "import { defineComponent as ___VERTER_defineComponent } from 'vue';
 
+          function ___VERTER_COMPONENT__() {
+
                           const ____VERTER_COMP_OPTION__ = {
                               name: 'test',
               
@@ -172,7 +182,9 @@ describe("Mergers Full", () => {
                                   }
                               }
                           }
-                          "
+                          
+          }
+          "
         `);
       });
 
@@ -193,6 +205,8 @@ describe("Mergers Full", () => {
         expect(p.source).toBe(source);
         expect(p.content).toMatchInlineSnapshot(`
           "
+          function ___VERTER_COMPONENT__() {
+
                           const ____VERTER_COMP_OPTION__ = defineComponent({
                               name: 'test',
               
@@ -202,7 +216,9 @@ describe("Mergers Full", () => {
                                   }
                               }
                           })
-                          "
+                          
+          }
+          "
         `);
       });
 
@@ -226,6 +242,8 @@ describe("Mergers Full", () => {
         expect(p.source).toBe(source);
         expect(p.content).toMatchInlineSnapshot(`
           "import { defineComponent } from 'vue'
+          function ___VERTER_COMPONENT__() {
+
                   // import stuff
                   
 
@@ -238,7 +256,9 @@ describe("Mergers Full", () => {
                           }
                       }
                   })
-                  "
+                  
+          }
+          "
         `);
       });
 
@@ -263,6 +283,8 @@ describe("Mergers Full", () => {
         expect(p.content).toMatchInlineSnapshot(`
           "import { defineComponent as ___VERTER_defineComponent } from 'vue';
           import { ref } from 'vue'
+          function ___VERTER_COMPONENT__() {
+
                   // import stuff
                   
 
@@ -275,8 +297,75 @@ describe("Mergers Full", () => {
                           }
                       }
                   }
-                  "
+                  
+          }
+          "
         `);
+        testSourceMaps(p);
+      });
+
+      it("should handle generic", () => {
+        const source = `<script lang="ts" generic="T extends string = 'foo'">
+        import { ref } from 'vue'
+
+        export default {
+            name: 'test',
+
+            data(){ 
+                return {
+                    foo: 'foo' as T
+                }
+            }
+        }
+        </script>`;
+        const p = process(source);
+        expect(p.source).toBe(source);
+        expect(p.content).toMatchInlineSnapshot(`
+          "import { defineComponent as ___VERTER_defineComponent } from 'vue';
+          import { ref } from 'vue'
+          function ___VERTER_COMPONENT__<T extends string = 'foo'>() {
+
+                  
+
+                  const ____VERTER_COMP_OPTION__ = {
+                      name: 'test',
+
+                      data(){ 
+                          return {
+                              foo: 'foo' as T
+                          }
+                      }
+                  }
+                  
+          }
+          "
+        `);
+        testSourceMaps(p);
+      });
+
+      it.only("should handle generic on the template", () => {
+        const source = `<script lang="ts" generic="T extends string = 'foo'">
+        import { ref } from 'vue'
+
+        export default {
+            name: 'test',
+
+            data(){ 
+                return {
+                    foo: 'foo' as T
+                }
+            }
+        }
+        </script>
+        <template>
+            <div>
+                {{ foo + 'aa' as T}}
+            </div>
+        </template>
+        `;
+        const p = process(source);
+        expect(p.source).toBe(source);
+        expect(p.content).toMatchInlineSnapshot();
         testSourceMaps(p);
       });
     });

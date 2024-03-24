@@ -29,13 +29,13 @@ describe("process", () => {
   }
 
   function process(parsed: ReturnType<typeof parse>) {
-    const s = new MagicString(parsed.node.source)
+    const s = new MagicString(parsed.node.source);
 
-    const r = processFn(parsed, s)
+    const r = processFn(parsed, s);
     return {
       ...r,
-      magicString: s
-    }
+      magicString: s,
+    };
   }
 
   function wrappedInTemplate(content: string) {
@@ -137,7 +137,7 @@ describe("process", () => {
       );
     });
 
-    it('binding boolean', () => {
+    it("binding boolean", () => {
       const source = `<my-component :bind="false"/>`;
 
       const parsed = doParseContent(source);
@@ -147,8 +147,9 @@ describe("process", () => {
         `"<template><___VERTER__comp.MyComponent bind={false}/></template>"`
       );
       expect(magicString.generateMap().toString()).toMatchInlineSnapshot(
-        `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,2BAAW,WAAY,CAAE,KAAK,CAAC,KAAK,CAAC"}"`);
-    })
+        `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,2BAAW,WAAY,CAAE,KAAK,CAAC,KAAK,CAAC"}"`
+      );
+    });
 
     it("binding with v-bind:bind", () => {
       const source = `<my-component v-bind:bind="bar"/>`;
@@ -174,7 +175,8 @@ describe("process", () => {
         `"<template><___VERTER__comp.MyComponent {...___VERTER__ctx.bar} foo="bar"/></template>"`
       );
       expect(magicString.generateMap().toString()).toMatchInlineSnapshot(
-        `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,2BAAW,WAAY,CAAQ,CAAP,iBAAQ,GAAG,CAAC"}"`);
+        `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,2BAAW,WAAY,CAAQ,CAAP,iBAAQ,GAAG,CAAC"}"`
+      );
     });
 
     it("props + v-bind", () => {
@@ -188,21 +190,25 @@ describe("process", () => {
       );
 
       expect(magicString.generateMap().toString()).toMatchInlineSnapshot(
-        `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,2BAAW,WAAY,WAAkB,CAAP,iBAAQ,GAAG,CAAC"}"`);
+        `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,2BAAW,WAAY,WAAkB,CAAP,iBAAQ,GAAG,CAAC"}"`
+      );
     });
 
-    it('should keep casing', () => {
+    it("should keep casing", () => {
       const source = `<my-component aria-autocomplete="bar"/>`;
 
       const parsed = doParseContent(source);
 
       const { magicString } = process(parsed);
       expect(magicString.toString()).toMatchInlineSnapshot(
-        `"<template><___VERTER__comp.MyComponent aria-autocomplete="bar"/></template>"`);
+        `"<template><___VERTER__comp.MyComponent aria-autocomplete="bar"/></template>"`
+      );
 
-      expect(magicString.generateMap().toString()).toMatchInlineSnapshot(`"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,2BAAW,WAAY"}"`)
+      expect(magicString.generateMap().toString()).toMatchInlineSnapshot(
+        `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,2BAAW,WAAY"}"`
+      );
       // testSourceMaps(magicString.toString(), magicString.generateMap({ hires: true, includeContent: true }))
-    })
+    });
 
     it("should pass boolean on just props", () => {
       const source = `<span foo/>`;
@@ -214,7 +220,8 @@ describe("process", () => {
       );
 
       expect(magicString.generateMap().toString()).toMatchInlineSnapshot(
-        `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,WAAW,IAAI"}"`);
+        `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,WAAW,IAAI"}"`
+      );
     });
 
     it("should not camelCase props", () => {
@@ -227,7 +234,8 @@ describe("process", () => {
       );
 
       expect(magicString.generateMap().toString()).toMatchInlineSnapshot(
-      `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,WAAW,IAAI,6BAA6B,IAAI"}"`);
+        `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,WAAW,IAAI,6BAA6B,IAAI"}"`
+      );
     });
     it('should camelCase "on" event listeners', () => {
       const source = `<span @check-for-something="test"></span>`;
@@ -277,7 +285,8 @@ describe("process", () => {
       );
 
       expect(magicString.generateMap().toString()).toMatchInlineSnapshot(
-        `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,WAAW,IAAI,eAAe,IAAI"}"`);
+        `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,WAAW,IAAI,eAAe,IAAI"}"`
+      );
     });
 
     it("multiple", () => {
@@ -290,7 +299,8 @@ describe("process", () => {
       );
 
       expect(magicString.generateMap().toString()).toMatchInlineSnapshot(
-        `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,WAAW,IAAI,wBAAwB,IAAI"}"`);
+        `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,WAAW,IAAI,wBAAwB,IAAI"}"`
+      );
     });
 
     it("with '", () => {
@@ -303,7 +313,8 @@ describe("process", () => {
       );
 
       expect(magicString.generateMap().toString()).toMatchInlineSnapshot(
-        `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,WAAW,IAAI,eAAe,IAAI"}"`);
+        `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,WAAW,IAAI,eAAe,IAAI"}"`
+      );
     });
 
     describe("directive", () => {
@@ -545,7 +556,8 @@ describe("process", () => {
           );
 
           expect(magicString.generateMap().toString()).toMatchInlineSnapshot(
-            `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,WAAmB,eAAC,KAAK,CAAX,CAAJ,CAAC,EAAE,CAAa,WAAW,EAAE,CAAK,CAAJ,CAAC,EAAE,CAAO,aAAa,EAAE,EAAC"}"`);
+            `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,WAAmB,eAAC,KAAK,CAAX,CAAJ,CAAC,EAAE,CAAa,WAAW,EAAE,CAAK,CAAJ,CAAC,EAAE,CAAO,aAAa,EAAE,EAAC"}"`
+          );
         });
 
         it("v-if + v-else-if", () => {
@@ -588,7 +600,7 @@ describe("process", () => {
           );
         });
 
-        it('v-if with expression', () => {
+        it("v-if with expression", () => {
           const source = `<div v-if="(() => {
             let ii = '0';
             return ii === ii
@@ -608,11 +620,13 @@ describe("process", () => {
                         return ii === ii
                       })())?<div >{ " t4est " }</div>
                       :<div >{ " else " }</div>}</template>"
-          `);
+          `
+          );
 
           expect(magicString.generateMap().toString()).toMatchInlineSnapshot(
-            `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,WAAoB,CAAC;AACrB;AACA;AACA,cAAc,CAHC,CAAL,CAAC,GAAG,CAGC,CAAC,aAEN,EAAE,GAAG;AACf,UAAe,CAAL,CAAC,GAAG,CAAO,CAAC,YAEZ,EAAE,GAAG,EAAC"}"`);
-        })
+            `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,WAAoB,CAAC;AACrB;AACA;AACA,cAAc,CAHC,CAAL,CAAC,GAAG,CAGC,CAAC,aAEN,EAAE,GAAG;AACf,UAAe,CAAL,CAAC,GAAG,CAAO,CAAC,YAEZ,EAAE,GAAG,EAAC"}"`
+          );
+        });
 
         describe.skip("invalid conditions", () => {
           it("v-else without v-if", () => {
@@ -901,6 +915,52 @@ describe("process", () => {
           );
         });
       });
+    });
+  });
+
+  describe("comment", () => {
+    it("should parse the comment", () => {
+      const source = `<!-- This is a comment -->`;
+
+      const parsed = doParseContent(source);
+      const { magicString } = process(parsed);
+      expect(magicString.toString()).toMatchInlineSnapshot(
+        `"<template>{ /* This is a comment */ }</template>"`
+      );
+    });
+
+    it("ts-expect-error", () => {
+      const source = `<!-- @ts-expect-error this is expected to fail -->
+      <this-does-not-exist />
+      `;
+
+      const parsed = doParseContent(source);
+      const { magicString } = process(parsed);
+      expect(magicString.toString()).toMatchInlineSnapshot(`
+        "<template>{ /* @ts-expect-error this is expected to fail */ }
+              <___VERTER__comp.ThisDoesNotExist />
+              </template>"
+      `);
+    });
+  });
+
+  describe("interpolation", () => {
+    it("should interpolate", () => {
+      const source = `<div>{{ foo}}</div>`;
+
+      const parsed = doParseContent(source);
+      const { magicString } = process(parsed);
+      expect(magicString.toString()).toMatchInlineSnapshot(
+        `"<template><div>{{ foo}}</div></template>"`
+      );
+    });
+
+    it("complex", () => {
+      const source = `<div>{{ foo + 'myString' + document.width }}</div>`;
+
+      const parsed = doParseContent(source);
+      const { magicString } = process(parsed);
+      expect(magicString.toString()).toMatchInlineSnapshot(`"<template><div>{ ___VERTER__ctx.foo + 'myString' + ___VERTER__ctx.document.width }</div></template>"`);
     });
   });
 });

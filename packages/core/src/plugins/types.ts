@@ -22,7 +22,7 @@ export interface ParseScriptContext {
   id: string;
 
   isSetup: boolean;
-  generic?: string | true | undefined;
+  generic?: string | undefined;
 
   sfc: SFCParseResult;
   script: SFCScriptBlock | null;

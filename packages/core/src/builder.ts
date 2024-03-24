@@ -58,7 +58,7 @@ export function createBuilder(config?: Partial<BuilderOptions>) {
         isSetup: Boolean(compiled?.setup),
         sfc: parsed,
         script: compiled,
-        generic: compiled?.attrs.generic,
+        generic: compiled?.attrs.generic as string,
         template: parsed.descriptor.template,
         s: new MagicString(source)
       } satisfies ParseScriptContext;

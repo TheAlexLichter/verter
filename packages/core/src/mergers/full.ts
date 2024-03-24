@@ -398,9 +398,6 @@ function processBlock(
         // options
 
         {
-          //   // TODO handle generics
-          //   clearTags(block, s);
-
           scriptTagProcess(block, context);
 
           // override the export default
@@ -500,7 +497,32 @@ function scriptTagProcess(block: VerterSFCBlock, context: ParseScriptContext) {
   const preGeneric = `\nfunction ___VERTER_COMPONENT__`;
   const postGeneric = `() {\n`;
 
-  if (context.generic) {
+  const generic =
+    typeof context.generic === "string"
+      ? context.generic
+      : context.script.attrs.generic;
+  // generic information will be kept intact for the source-map
+  if (context) {
+    const tagContent = context.s.original.slice(
+      block.tag.pos.open.start,
+      block.tag.pos.open.end
+    );
+
+    const genericIndex = tagContent.indexOf(generic);
+
+    // replace before generic with `preGeneric`
+    context.s.overwrite(
+      block.tag.pos.open.start,
+      block.tag.pos.open.start + genericIndex,
+      preGeneric + "<"
+    );
+
+    // replace after generic with `postGeneric`
+    context.s.overwrite(
+      block.tag.pos.open.start + genericIndex + generic.length,
+      block.tag.pos.open.end,
+      ">" + postGeneric
+    );
   } else {
     context.s.overwrite(
       block.tag.pos.open.start,

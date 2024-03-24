@@ -10,6 +10,7 @@ import {
   ElementTypes,
   ExpressionNode,
   ForParseResult,
+  InterpolationNode,
   NodeTypes,
   PlainElementNode,
   SimpleExpressionNode,
@@ -17,7 +18,7 @@ import {
 import { camelize, capitalize, isGloballyAllowed, makeMap } from "@vue/shared";
 import type * as _babel_types from "@babel/types";
 
-const isLiteralWhitelisted = /*#__PURE__*/ makeMap('true,false,null,this')
+const isLiteralWhitelisted = /*#__PURE__*/ makeMap("true,false,null,this");
 
 interface ProcessContext {
   ignoredIdentifiers?: string[];
@@ -103,8 +104,8 @@ const render = {
   [ParsedType.Text]: renderText,
   [ParsedType.For]: renderFor,
   // [ParsedType.RenderSlot]: renderSlot,
-  // [ParsedType.Comment]: renderComment,
-  // [ParsedType.Interpolation]: renderInterpolation,
+  [ParsedType.Comment]: renderComment,
+  [ParsedType.Interpolation]: renderInterpolation,
   [ParsedType.Condition]: renderCondition,
 };
 
@@ -113,7 +114,11 @@ function renderNode(
   s: MagicString,
   context: ProcessContext
 ) {
-  return render[node.type](node, s, context);
+  try {
+    return render[node.type](node, s, context);
+  } catch (e) {
+    console.error(node.type, e);
+  }
 }
 
 function renderElement(
@@ -185,7 +190,7 @@ function renderAttribute(
   } else if (n.type === NodeTypes.DIRECTIVE) {
     if (n.name === "bind") {
       // const name = n.arg;
-      const name = retriveStringExpressionNode(n.arg, undefined, context);
+      const name = retrieveStringExpressionNode(n.arg, undefined, context);
       // if is content let it apply the mapping
       //   const content = retriveStringExpressionNode(n.exp, s, context);
 
@@ -197,7 +202,7 @@ function renderAttribute(
       }
 
       if (n.exp) {
-        retriveStringExpressionNode(n.exp, s, context);
+        retrieveStringExpressionNode(n.exp, s, context);
       }
 
       if (name !== n.rawName) {
@@ -283,7 +288,7 @@ function renderAttribute(
 
       // if(n.rawName[0])
     } else if (n.name === "on") {
-      const name = retriveStringExpressionNode(n.arg, undefined, context);
+      const name = retrieveStringExpressionNode(n.arg, undefined, context);
 
       const fixedName = capitalize(camelize(name));
       if (fixedName !== name) {
@@ -291,7 +296,7 @@ function renderAttribute(
       }
 
       if (n.exp) {
-        retriveStringExpressionNode(n.exp, s, context);
+        retrieveStringExpressionNode(n.exp, s, context);
       }
 
       if (name !== n.rawName) {
@@ -362,15 +367,15 @@ function renderFor(
   const { source, value, key, index } = node.for;
 
   const keyString = key
-    ? retriveStringExpressionNode(key, undefined, context, false)
+    ? retrieveStringExpressionNode(key, undefined, context, false)
     : "";
 
   const sourceString = source
-    ? retriveStringExpressionNode(source, s, context)
+    ? retrieveStringExpressionNode(source, s, context)
     : "()";
 
   const valueString = value
-    ? retriveStringExpressionNode(value, undefined, context, false)
+    ? retrieveStringExpressionNode(value, undefined, context, false)
     : "value";
 
   const ignoredIdentifiers = [
@@ -380,10 +385,10 @@ function renderFor(
   ].filter(Boolean);
 
   const indexString = index
-    ? retriveStringExpressionNode(index, undefined, {
-      ...context,
-      ignoredIdentifiers,
-    })
+    ? retrieveStringExpressionNode(index, undefined, {
+        ...context,
+        ignoredIdentifiers,
+      })
     : "";
 
   // TODO content
@@ -514,9 +519,9 @@ function renderCondition(
     const lastChild =
       lastCondition.children[lastCondition.children.length - 1]?.type === "for"
         ? lastCondition.children[lastCondition.children.length - 1]?.children[
-        lastCondition.children[lastCondition.children.length - 1]?.children
-          .length - 1
-        ]
+            lastCondition.children[lastCondition.children.length - 1]?.children
+              .length - 1
+          ]
         : lastCondition.children[lastCondition.children.length - 1];
     const childEnd = lastChild.node.loc.end.offset;
     s.appendRight(childEnd, "}");
@@ -532,9 +537,9 @@ function renderCondition(
     const lastChild =
       condition.children[condition.children.length - 1]?.type === "for"
         ? condition.children[condition.children.length - 1]?.children[
-        condition.children[condition.children.length - 1]?.children.length -
-        1
-        ]
+            condition.children[condition.children.length - 1]?.children.length -
+              1
+          ]
         : condition.children[condition.children.length - 1];
 
     const childStart = firstChild.node.loc.start.offset;
@@ -605,7 +610,7 @@ function renderCondition(
         ")"
       );
 
-      retriveStringExpressionNode(expression, s, context, true);
+      retrieveStringExpressionNode(expression, s, context, true);
     }
 
     // s.overwrite(conditionStart - 1, conditionStart)
@@ -635,9 +640,9 @@ function renderCondition(
     const lastChild =
       lastCondition.children[lastCondition.children.length - 1]?.type === "for"
         ? lastCondition.children[lastCondition.children.length - 1]?.children[
-        lastCondition.children[lastCondition.children.length - 1]?.children
-          .length - 1
-        ]
+            lastCondition.children[lastCondition.children.length - 1]?.children
+              .length - 1
+          ]
         : lastCondition.children[lastCondition.children.length - 1];
     const childEnd = lastChild.node.loc.end.offset;
     s.prependRight(childEnd, " : undefined");
@@ -680,6 +685,80 @@ function renderCondition(
   // return `{ ${c} }`;
 }
 
+function renderComment(
+  node: ParsedNodeBase,
+  s: MagicString,
+  context: ProcessContext
+) {
+  const commentOpenTag = "<!--";
+  const commentCloseTag = "-->";
+  const startingTag = node.node.loc.source.indexOf(commentOpenTag);
+  const closingTag = node.node.loc.source.indexOf(commentCloseTag);
+
+  s.overwrite(
+    node.node.loc.start.offset + startingTag,
+    node.node.loc.start.offset + startingTag + commentOpenTag.length,
+    "{ /*"
+  );
+
+  s.overwrite(
+    node.node.loc.start.offset + closingTag,
+    node.node.loc.start.offset + closingTag + commentCloseTag.length,
+    "*/ }"
+  );
+}
+function renderInterpolation(
+  node: ParsedNodeBase,
+  s: MagicString,
+  context: ProcessContext
+) {
+  // replace '{{' and '}}' with '{' and '}' to make valid TSX
+  const interpolationNode = node.node as InterpolationNode;
+  if (interpolationNode.loc.source.startsWith("{{")) {
+    s.overwrite(
+      interpolationNode.loc.start.offset,
+      interpolationNode.loc.start.offset + 2,
+      "{"
+    );
+  }
+  if (interpolationNode.loc.source.endsWith("}}")) {
+    s.overwrite(
+      interpolationNode.loc.end.offset - 2,
+      interpolationNode.loc.end.offset,
+      "}"
+    );
+  }
+
+  // process the content
+
+  retrieveStringExpressionNode(interpolationNode.content, s, context);
+
+  // if (interpolationNode.content.ast) {
+
+  // } else {
+  //   appendCtx(
+  //     interpolationNode.content,
+  //     s,
+  //     context,
+  //     // interpolationNode.loc.start.offset
+  //   );
+  // }
+
+  // if (true) {
+  //   const g = node.node.content.ast
+  //     ? generateNodeText(node.node.content.ast)
+  //     : appendCtx(node.node.content.content);
+
+  //   if (g !== `_ctx.${node.node.content.content}`) {
+  //     const r = generateNodeText(node.node.content.ast);
+  //   }
+  //   const n = node.node as InterpolationNode;
+
+  //   return `{ ${g} }`;
+  // }
+  // return `{ ${node.content?.content} }`;
+}
+
 function resolveComponentTag(
   node: PlainElementNode | ComponentNode | ElementNode,
   context: ProcessContext
@@ -711,11 +790,12 @@ function resolveComponentTag(
   return { name: node.tag };
 }
 
-function retriveStringExpressionNode(
+function retrieveStringExpressionNode(
   node: ExpressionNode | undefined,
   s: MagicString | undefined,
   context: ProcessContext,
-  prepend = true
+  prepend = true,
+  overrideOffset = -1
 ) {
   if (!node) return undefined;
   switch (node.type) {
@@ -726,7 +806,8 @@ function retriveStringExpressionNode(
       if (!node.ast) {
         return prepend ? appendCtx(node, s, context) : node.content;
       }
-      const offset = node.loc.start.offset - 1;
+      const offset =
+        overrideOffset >= 0 ? overrideOffset : node.loc.start.offset;
       return parseNodeText(node.ast, s, context, offset, prepend);
     }
     case NodeTypes.COMPOUND_EXPRESSION: {
@@ -744,9 +825,13 @@ function parseNodeText(
   node: _babel_types.Node,
   s: MagicString | undefined,
   context: ProcessContext,
-  offset,
+  offset: number,
   prepend = true
 ) {
+  if (offset > 0) {
+    --offset;
+  }
+
   switch (node.type) {
     case "CallExpression": {
       const callee = node.callee;
@@ -846,10 +931,12 @@ function appendCtx(
     return content;
 
   const accessor = context.accessor;
-
   if (s) {
-    const start = (node.loc.start.offset ?? node.loc.start.index) + __offset;
-    const end = (node.loc.end.offset ?? node.loc.end.index) + __offset;
+    // node.loc.start.index is babel accessing, the first char pos is 1
+    // instead of zero-based
+    const start =
+      (node.loc.start.offset ?? node.loc.start.index - 1) + __offset;
+    const end = (node.loc.end.offset ?? node.loc.end.index - 1) + __offset;
     // there's a case where the offset is off
     if (s.original.slice(start, end) !== content) {
       s.prependRight(start + 1, `${accessor}.`);
