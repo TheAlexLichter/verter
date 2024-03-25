@@ -210,23 +210,36 @@ export function mergeFull(
 
   // append imports
   {
-    // reduce generated imports
-    const generated = locations.import
-      .filter((x) => !!x.generated && !x.asType)
-      .reduce((prev, cur) => {
-        const arr = prev[cur.from] ?? (prev[cur.from] = []);
-        arr.push(...cur.items);
-        return prev;
-      }, {} as Record<string, ImportItem[]>);
+    const generatedImports = locations.import.filter((x) => !!x.generated);
 
-    // reduce generated type only imports
-    const generatedTypes = locations.import
-      .filter((x) => !!x.generated && x.asType)
-      .reduce((prev, cur) => {
-        const arr = prev[cur.from] ?? (prev[cur.from] = []);
-        arr.push(...cur.items);
-        return prev;
-      }, {} as Record<string, ImportItem[]>);
+    const generated = {} as Record<string, ImportItem[]>;
+    const generatedTypes = {} as Record<string, ImportItem[]>;
+
+    for (let i = 0; i < generatedImports.length; i++) {
+      const element = generatedImports[i];
+
+      const o = element.asType ? generatedTypes : generated;
+      const arr = o[element.from] ?? (o[element.from] = []);
+      arr.push(...element.items);
+    }
+
+    // reduce generated imports
+    // const generated = generatedImports
+    //   .filter((x) => !!x.generated && !x.asType)
+    //   .reduce((prev, cur) => {
+    //     const arr = prev[cur.from] ?? (prev[cur.from] = []);
+    //     arr.push(...cur.items);
+    //     return prev;
+    //   }, {} as Record<string, ImportItem[]>);
+
+    // // reduce generated type only imports
+    // const generatedTypes = generatedImports
+    //   .filter((x) => !!x.generated && x.asType)
+    //   .reduce((prev, cur) => {
+    //     const arr = prev[cur.from] ?? (prev[cur.from] = []);
+    //     arr.push(...cur.items);
+    //     return prev;
+    //   }, {} as Record<string, ImportItem[]>);
 
     const importsGenerated = Object.entries(generated).map(
       ([fromKey, items]) =>
@@ -585,15 +598,40 @@ function processBlock(
         //   ],
         // });
 
+        let content = context.script.content.slice(
+          context.script.content.indexOf("const ____VERTER_COMP_OPTION__")
+        );
+
+        // no defineComponent, we need to append the defineComponent
+        if (content.indexOf("_defineComponent(") === -1) {
+          content =
+            content.replace(
+              `const ____VERTER_COMP_OPTION__ = {`,
+              `const ____VERTER_COMP_OPTION__ = ___VERTER_defineComponent({`
+            ) + ")";
+
+          locations.import.push({
+            type: LocationType.Import,
+            from: "vue",
+            generated: true,
+            node: null,
+            items: [
+              {
+                name: "defineComponent",
+                alias: "___VERTER_defineComponent",
+                // note could be type
+                type: false,
+              },
+            ],
+          });
+        }
+
         locations.declaration.push({
           type: LocationType.Declaration,
           generated: true,
           context: "pre",
           declaration: {
-            // NOTE It might contain the other variables, we might need to slice
-            content: context.script.content.slice(
-              context.script.content.indexOf("const ____VERTER_COMP_OPTION__")
-            ),
+            content,
             //   context.script.content.replace(
             //     "____VERTER_COMP_OPTION__ = ",
             //     "____VERTER_COMP_OPTION__ = ___VERTER_defineComponent("
@@ -682,9 +720,27 @@ function processBlock(
                 // find last }
                 const closeIndex = exportContent.lastIndexOf("}");
 
-                s.prependRight(openingIndex + startOffset, "defineComponent(");
+                s.prependRight(
+                  openingIndex + startOffset,
+                  "___VERTER_defineComponent("
+                );
 
                 s.prependRight(closeIndex + startOffset + 1, ")");
+
+                locations.import.push({
+                  type: LocationType.Import,
+                  from: "vue",
+                  generated: true,
+                  node: null,
+                  items: [
+                    {
+                      name: "defineComponent",
+                      alias: "___VERTER_defineComponent",
+                      // note could be type
+                      type: false,
+                    },
+                  ],
+                });
               } else {
                 wrap = true;
 
@@ -735,7 +791,11 @@ function processBlock(
       );
 
       // override </template>
-      s.overwrite(block.tag.pos.close.start, block.tag.pos.close.end, "\n</>}");
+      s.overwrite(
+        block.tag.pos.close.start,
+        block.tag.pos.close.end,
+        "\n</>}\n___VERTER__TEMPLATE_RENDER();\n"
+      );
 
       // if (context.template) {
       //     s.overwrite(templateStartOffset, context.template.loc.start.offset, `function ___VERTER__TEMPLATE_RENDER${generic ? `<${generic}>` : ''}() {\n<>`)

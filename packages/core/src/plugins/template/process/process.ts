@@ -812,6 +812,7 @@ function parseNodeText(
   }
 
   if ("callee" in node) {
+    // NOTE -1 is magic
     node.callee && parseNodeText(node.callee, s, context, offset - 1, prepend);
   }
 

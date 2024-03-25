@@ -50,24 +50,29 @@ describe("Mergers Full", () => {
 
       function ___VERTER_COMPONENT__() {
 
-              const ____VERTER_COMP_OPTION__ = {
+
+              const ____VERTER_COMP_OPTION__ = ___VERTER_defineComponent({
                   data(){
                       return { test: 'hello' }
                   }
-              }
-              const ___VERTER_COMP___ = ___VERTER_defineComponent(____VERTER_COMP_OPTION__)
-      const ___VERTER__ctx = { ...(new ___VERTER_COMP___()) }
-      const ___VERTER__comp = { 
-                  ...({} as ExtractRenderComponents<typeof ___VERTER__ctx>),
-                }
-      function ___VERTER__TEMPLATE_RENDER() {
+              })
+              function ___VERTER__TEMPLATE_RENDER() {
       <>
                   <div key={___VERTER__ctx.test}>{ "test" }</div>
               
       </>}
+      ___VERTER__TEMPLATE_RENDER();
+      const ___VERTER_COMP___ = ____VERTER_COMP_OPTION__
+      const ___VERTER__ctx = { ...(new ___VERTER_COMP___()) }
+      const ___VERTER__comp = { 
+                  ...({} as ExtractRenderComponents<typeof ___VERTER__ctx>),
+                  ...({} as { [K in keyof JSX.IntrinsicElements]: { new(): { $props: JSX.IntrinsicElements[K] } } })
+                }
+      return ___VERTER_COMP___;
       }
 
-              "
+              const __VERTER__RESULT = ___VERTER_COMPONENT__();
+      export default __VERTER__RESULT;"
     `);
 
     p.map;
@@ -87,10 +92,10 @@ describe("Mergers Full", () => {
     expect(p.source).toBe(source);
 
     expect(p.content).toMatchInlineSnapshot(`
-      "import { defineComponent as ___VERTER_defineComponent } from 'vue';
+      "
+      import { defineComponent as ___VERTER_defineComponent } from 'vue';
 
       function ___VERTER_COMPONENT__() {
-
       const ____VERTER_COMP_OPTION__ = ___VERTER_defineComponent({
         __name: 'test',
         setup(__props, { expose: __expose }) {
@@ -106,19 +111,23 @@ describe("Mergers Full", () => {
       })
 
               const test = ref('hello')
-              const ___VERTER_COMP___ = ____VERTER_COMP_OPTION__
-      const ___VERTER__ctx = { ...(new ___VERTER_COMP___()) }
-      const ___VERTER__comp = { 
-                  ...({} as ExtractRenderComponents<typeof ___VERTER__ctx>),
-                }
-      function ___VERTER__TEMPLATE_RENDER() {
+              function ___VERTER__TEMPLATE_RENDER() {
       <>
                   <div key={___VERTER__ctx.test}>{ "test" }</div>
               
       </>}
+      ___VERTER__TEMPLATE_RENDER();
+      const ___VERTER_COMP___ = ____VERTER_COMP_OPTION__
+      const ___VERTER__ctx = { ...(new ___VERTER_COMP___()) }
+      const ___VERTER__comp = { 
+                  ...({} as ExtractRenderComponents<typeof ___VERTER__ctx>),
+                  ...({} as { [K in keyof JSX.IntrinsicElements]: { new(): { $props: JSX.IntrinsicElements[K] } } })
+                }
+      return ___VERTER_COMP___;
       }
 
-              "
+              const __VERTER__RESULT = ___VERTER_COMPONENT__();
+      export default __VERTER__RESULT;"
     `);
 
     testSourceMaps(p);
@@ -144,7 +153,7 @@ describe("Mergers Full", () => {
                     }
           return ___VERTER_COMP___;
           }
-          const __VERTER__RESULT = ___VERTER_COMPONENT__()
+          const __VERTER__RESULT = ___VERTER_COMPONENT__();
           export default __VERTER__RESULT;"
         `);
       });
@@ -157,11 +166,12 @@ describe("Mergers Full", () => {
         const p = process(source);
         expect(p.source).toBe(source);
         expect(p.content).toMatchInlineSnapshot(`
-          "
+          "import { defineComponent as ___VERTER_defineComponent } from 'vue';
+
           function ___VERTER_COMPONENT__() {
 
 
-                          const ____VERTER_COMP_OPTION__ = defineComponent({})
+                          const ____VERTER_COMP_OPTION__ = ___VERTER_defineComponent({})
                           const ___VERTER_COMP___ = ____VERTER_COMP_OPTION__
           const ___VERTER__ctx = { ...(new ___VERTER_COMP___()) }
           const ___VERTER__comp = { 
@@ -170,7 +180,7 @@ describe("Mergers Full", () => {
                     }
           return ___VERTER_COMP___;
           }
-          const __VERTER__RESULT = ___VERTER_COMPONENT__()
+          const __VERTER__RESULT = ___VERTER_COMPONENT__();
           export default __VERTER__RESULT;"
         `);
       });
@@ -191,11 +201,12 @@ describe("Mergers Full", () => {
         const p = process(source);
         expect(p.source).toBe(source);
         expect(p.content).toMatchInlineSnapshot(`
-          "
+          "import { defineComponent as ___VERTER_defineComponent } from 'vue';
+
           function ___VERTER_COMPONENT__() {
 
 
-                          const ____VERTER_COMP_OPTION__ = defineComponent({
+                          const ____VERTER_COMP_OPTION__ = ___VERTER_defineComponent({
                               name: 'test',
               
                               data(){ 
@@ -212,7 +223,7 @@ describe("Mergers Full", () => {
                     }
           return ___VERTER_COMP___;
           }
-          const __VERTER__RESULT = ___VERTER_COMPONENT__()
+          const __VERTER__RESULT = ___VERTER_COMPONENT__();
           export default __VERTER__RESULT;"
         `);
         testSourceMaps(p);
@@ -255,7 +266,7 @@ describe("Mergers Full", () => {
                     }
           return ___VERTER_COMP___;
           }
-          const __VERTER__RESULT = ___VERTER_COMPONENT__()
+          const __VERTER__RESULT = ___VERTER_COMPONENT__();
           export default __VERTER__RESULT;"
         `);
       });
@@ -297,7 +308,7 @@ describe("Mergers Full", () => {
                     }
           return ___VERTER_COMP___;
           }
-          const __VERTER__RESULT = ___VERTER_COMPONENT__()
+          const __VERTER__RESULT = ___VERTER_COMPONENT__();
           export default __VERTER__RESULT;"
         `);
       });
@@ -345,7 +356,7 @@ describe("Mergers Full", () => {
                     }
           return ___VERTER_COMP___;
           }
-          const __VERTER__RESULT = ___VERTER_COMPONENT__()
+          const __VERTER__RESULT = ___VERTER_COMPONENT__();
           export default __VERTER__RESULT;"
         `);
 
@@ -371,14 +382,15 @@ describe("Mergers Full", () => {
         const p = process(source);
         expect(p.source).toBe(source);
         expect(p.content).toMatchInlineSnapshot(`
-          "import { ref } from 'vue'
+          "import { defineComponent as ___VERTER_defineComponent } from 'vue';
+          import { ref } from 'vue'
           function ___VERTER_COMPONENT__() {
 
 
                   // import stuff
                   
 
-                  const ____VERTER_COMP_OPTION__ = defineComponent({
+                  const ____VERTER_COMP_OPTION__ = ___VERTER_defineComponent({
                       name: 'test',
 
                       data(){ 
@@ -395,7 +407,7 @@ describe("Mergers Full", () => {
                     }
           return ___VERTER_COMP___;
           }
-          const __VERTER__RESULT = ___VERTER_COMPONENT__()
+          const __VERTER__RESULT = ___VERTER_COMPONENT__();
           export default __VERTER__RESULT;"
         `);
         testSourceMaps(p);
@@ -418,13 +430,14 @@ describe("Mergers Full", () => {
         const p = process(source);
         expect(p.source).toBe(source);
         expect(p.content).toMatchInlineSnapshot(`
-          "import { ref } from 'vue'
+          "import { defineComponent as ___VERTER_defineComponent } from 'vue';
+          import { ref } from 'vue'
           function ___VERTER_COMPONENT__<T extends string = 'foo'>() {
 
 
                   
 
-                  const ____VERTER_COMP_OPTION__ = defineComponent({
+                  const ____VERTER_COMP_OPTION__ = ___VERTER_defineComponent({
                       name: 'test',
 
                       data(){ 
@@ -446,7 +459,7 @@ describe("Mergers Full", () => {
                   /* props info here */
 
                  }} };
-          export default __VERTER__RESULT as __VERTER_RESULT_TYPE__;"
+          export default __VERTER__RESULT as unknown as __VERTER_RESULT_TYPE__;"
         `);
         testSourceMaps(p);
       });
@@ -474,13 +487,14 @@ describe("Mergers Full", () => {
         const p = process(source);
         expect(p.source).toBe(source);
         expect(p.content).toMatchInlineSnapshot(`
-          "import { ref } from 'vue'
+          "import { defineComponent as ___VERTER_defineComponent } from 'vue';
+          import { ref } from 'vue'
           function ___VERTER_COMPONENT__<T extends string = 'foo'>() {
 
 
                   
 
-                  const ____VERTER_COMP_OPTION__ = defineComponent({
+                  const ____VERTER_COMP_OPTION__ = ___VERTER_defineComponent({
                       name: 'test',
 
                       data(){ 
@@ -489,19 +503,21 @@ describe("Mergers Full", () => {
                           }
                       }
                   })
-                  const ___VERTER_COMP___ = ____VERTER_COMP_OPTION__
-          const ___VERTER__ctx = { ...(new ___VERTER_COMP___()) }
-          const ___VERTER__comp = { 
-                      ...({} as ExtractRenderComponents<typeof ___VERTER__ctx>),
-                      ...({} as { [K in keyof JSX.IntrinsicElements]: { new(): { $props: JSX.IntrinsicElements[K] } } })
-                    }
-          return ___VERTER_COMP___;function ___VERTER__TEMPLATE_RENDER() {
+                  function ___VERTER__TEMPLATE_RENDER() {
           <>
                       <div>
                           { ___VERTER__ctx.foo + 'aa' as T}
                       </div>
                   
           </>}
+          ___VERTER__TEMPLATE_RENDER();
+          const ___VERTER_COMP___ = ____VERTER_COMP_OPTION__
+          const ___VERTER__ctx = { ...(new ___VERTER_COMP___()) }
+          const ___VERTER__comp = { 
+                      ...({} as ExtractRenderComponents<typeof ___VERTER__ctx>),
+                      ...({} as { [K in keyof JSX.IntrinsicElements]: { new(): { $props: JSX.IntrinsicElements[K] } } })
+                    }
+          return ___VERTER_COMP___;
           }
 
                   
@@ -510,7 +526,7 @@ describe("Mergers Full", () => {
                   /* props info here */
 
                  }} };
-          export default __VERTER__RESULT as __VERTER_RESULT_TYPE__;"
+          export default __VERTER__RESULT as unknown as __VERTER_RESULT_TYPE__;"
         `);
         testSourceMaps(p);
       });
@@ -538,13 +554,14 @@ describe("Mergers Full", () => {
         const p = process(source);
         expect(p.source).toBe(source);
         expect(p.content).toMatchInlineSnapshot(`
-          "import { ref } from 'vue'
+          "import { defineComponent as ___VERTER_defineComponent } from 'vue';
+          import { ref } from 'vue'
           function ___VERTER_COMPONENT__<T extends string & { supa?: () => number } = 'foo'>() {
 
 
                   
 
-                  const ____VERTER_COMP_OPTION__ = defineComponent({
+                  const ____VERTER_COMP_OPTION__ = ___VERTER_defineComponent({
                       name: 'test',
 
                       data(){ 
@@ -553,19 +570,21 @@ describe("Mergers Full", () => {
                           }
                       }
                   })
-                  const ___VERTER_COMP___ = ____VERTER_COMP_OPTION__
-          const ___VERTER__ctx = { ...(new ___VERTER_COMP___()) }
-          const ___VERTER__comp = { 
-                      ...({} as ExtractRenderComponents<typeof ___VERTER__ctx>),
-                      ...({} as { [K in keyof JSX.IntrinsicElements]: { new(): { $props: JSX.IntrinsicElements[K] } } })
-                    }
-          return ___VERTER_COMP___;function ___VERTER__TEMPLATE_RENDER() {
+                  function ___VERTER__TEMPLATE_RENDER() {
           <>
                       <div>
                           { (___VERTER__ctx.foo + 'aa' as typeof ___VERTER__ctx.foo).supa?.()}
                       </div>
                   
           </>}
+          ___VERTER__TEMPLATE_RENDER();
+          const ___VERTER_COMP___ = ____VERTER_COMP_OPTION__
+          const ___VERTER__ctx = { ...(new ___VERTER_COMP___()) }
+          const ___VERTER__comp = { 
+                      ...({} as ExtractRenderComponents<typeof ___VERTER__ctx>),
+                      ...({} as { [K in keyof JSX.IntrinsicElements]: { new(): { $props: JSX.IntrinsicElements[K] } } })
+                    }
+          return ___VERTER_COMP___;
           }
 
                   
@@ -574,7 +593,134 @@ describe("Mergers Full", () => {
                   /* props info here */
 
                  }} };
-          export default __VERTER__RESULT as __VERTER_RESULT_TYPE__;"
+          export default __VERTER__RESULT as unknown as __VERTER_RESULT_TYPE__;"
+        `);
+      });
+
+      it.only("handle generic list", () => {
+        const source = `<script setup lang="ts" generic="T">
+        import { computed } from "vue";
+        
+        const props = defineProps<{
+          items: T[];
+          getKey: (item: T) => string | number;
+          getLabel: (item: T) => string;
+        }>();
+        
+        const orderedItems = computed<T[]>(() =>
+          props.items.sort((item1, item2) =>
+            props.getLabel(item1).localeCompare(props.getLabel(item2))
+          )
+        );
+        
+        function getItemAtIndex(index: number): T | undefined {
+          if (index < 0 || index >= orderedItems.value.length) {
+            return undefined;
+          }
+          return orderedItems.value[index];
+        }
+        
+        defineExpose({ getItemAtIndex });
+        </script>
+        
+        <template>
+          <ol>
+            <li v-for="item in orderedItems" :key="getKey(item)">
+              {{ getLabel(item) }}
+            </li>
+          </ol>
+        </template>
+        
+        `;
+        const p = process(source);
+        expect(p.source).toBe(source);
+        expect(p.content).toMatchInlineSnapshot(`
+          "import { defineComponent as _defineComponent } from 'vue'
+          import { computed } from "vue";
+          function ___VERTER_COMPONENT__<T>() {
+          const ____VERTER_COMP_OPTION__ = /*#__PURE__*/_defineComponent({
+            __name: 'test',
+            props: {
+              items: { type: Array, required: true },
+              getKey: { type: Function, required: true },
+              getLabel: { type: Function, required: true }
+            },
+            setup(__props: any, { expose: __expose }) {
+
+                  const props = __props;
+                  
+                  const orderedItems = computed<T[]>(() =>
+                    props.items.sort((item1, item2) =>
+                      props.getLabel(item1).localeCompare(props.getLabel(item2))
+                    )
+                  );
+                  
+                  function getItemAtIndex(index: number): T | undefined {
+                    if (index < 0 || index >= orderedItems.value.length) {
+                      return undefined;
+                    }
+                    return orderedItems.value[index];
+                  }
+                  
+                  __expose({ getItemAtIndex });
+                  
+          const __returned__ = { props, orderedItems, getItemAtIndex }
+          Object.defineProperty(__returned__, '__isScriptSetup', { enumerable: false, value: true })
+          return __returned__
+          }
+
+          })
+
+                  
+                  
+                  const props = defineProps<{
+                    items: T[];
+                    getKey: (item: T) => string | number;
+                    getLabel: (item: T) => string;
+                  }>();
+                  
+                  const orderedItems = computed<T[]>(() =>
+                    props.items.sort((item1, item2) =>
+                      props.getLabel(item1).localeCompare(props.getLabel(item2))
+                    )
+                  );
+                  
+                  function getItemAtIndex(index: number): T | undefined {
+                    if (index < 0 || index >= orderedItems.value.length) {
+                      return undefined;
+                    }
+                    return orderedItems.value[index];
+                  }
+                  
+                  defineExpose({ getItemAtIndex });
+                  function ___VERTER__TEMPLATE_RENDER() {
+          <>
+                    <ol>
+                      {renderList(___VERTER__ctx.orderedItems,(item)=>{<li  key=___VERTER__ctx.{getKey(item)}>
+                        {___VERTER__ctx. getLabel(item) }
+                      </li>})}
+                    </ol>
+                  
+          </>}
+          ___VERTER__TEMPLATE_RENDER();
+          const ___VERTER_COMP___ = ____VERTER_COMP_OPTION__
+          const ___VERTER__ctx = { ...(new ___VERTER_COMP___()) }
+          const ___VERTER__comp = { 
+                      ...({} as ExtractRenderComponents<typeof ___VERTER__ctx>),
+                      ...({} as { [K in keyof JSX.IntrinsicElements]: { new(): { $props: JSX.IntrinsicElements[K] } } })
+                    }
+          return ___VERTER_COMP___;
+          }
+
+                  
+                  
+                  
+                  const __VERTER__RESULT = ___VERTER_COMPONENT__<any>();
+          type __VERTER_RESULT_TYPE__<_VUE_TS__T = any> = (ReturnType<typeof ___VERTER_COMPONENT__<_VUE_TS__T>> extends infer Comp ? Pick<Comp, keyof Comp> : never) & { new<T extends _VUE_TS__T = _VUE_TS__T>(): { $props: { 
+                  /* props info here */
+
+                 }} };
+          export default __VERTER__RESULT as unknown as __VERTER_RESULT_TYPE__;"
         `);
       });
     });
