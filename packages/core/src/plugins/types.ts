@@ -107,8 +107,9 @@ export interface TypeLocationDeclaration {
    * 'pre': adds in the generator but before options
    * 'post': adds in generator but after options
    * 'end': adds in generator but at the end just before return
+   * 'finish': adds outside of generator, to add exports, etc
    */
-  context?: "global" | "pre" | "post" | "end";
+  context?: "global" | "pre" | "post" | "end" | "finish";
 
   declaration: {
     /**
@@ -130,7 +131,7 @@ export interface TypeLocationDeclaration {
 export interface TypeLocationImport {
   type: LocationType.Import;
   generated?: boolean;
-  node: _babel_types.ImportDeclaration;
+  node?: _babel_types.ImportDeclaration;
   items: ImportItem[];
   from: string;
 

@@ -93,10 +93,65 @@ export function mergeFull(
     processBlock(block, context, locations);
   }
 
+  // adding some imports and variable context
+  {
+    locations.declaration.push({
+      type: LocationType.Declaration,
+      generated: true,
+      context: "post",
+      declaration: {
+        type: "const",
+        name: "___VERTER__ctx",
+        content: `{ ${["...(new ___VERTER_COMP___())"].join(",\n")} }`,
+      },
+    });
+
+    locations.declaration.push({
+      type: LocationType.Declaration,
+      generated: true,
+      context: "post",
+      declaration: {
+        type: "const",
+        name: "___VERTER__comp",
+        content: `{ 
+            ...({} as ExtractRenderComponents<typeof ___VERTER__ctx>),
+            ...({} as { [K in keyof JSX.IntrinsicElements]: { new(): { $props: JSX.IntrinsicElements[K] } } })
+          }`,
+      },
+    });
+
+    if (generic) {
+      // TODO handle generic
+    } else {
+      locations.declaration.push({
+        type: LocationType.Declaration,
+        generated: true,
+        context: "finish",
+        declaration: {
+          type: "const",
+          name: "__VERTER__RESULT",
+          content: `___VERTER_COMPONENT__()`,
+        },
+      });
+    }
+
+    // locations.import.push({
+    //   type: LocationType.Import,
+    //   generated: true,
+    //   from: "vue",
+    //   asType: true,
+    //   items: [
+    //     {
+    //       name: "IntrinsicElementAttributes",
+    //       alias: "___VERTER_IntrinsicElementAttributes",
+    //     },
+    //   ],
+    // });
+  }
+
   // append imports
   {
     // move non Generated imports to the top
-
     for (const { node, offset } of locations.import.filter(
       (x) => !x.generated
     )) {
@@ -148,58 +203,8 @@ export function mergeFull(
     }
   }
 
-  // adding some imports and variable context
-  {
-    const regexComp = /const ____VERTER_COMP_OPTION__ = [^\w]*{]*/gm;
-    const rawObjectDeclaration = regexComp.test(s.toString());
-
-    if (!rawObjectDeclaration) {
-      locations[LocationType.Import].push({
-        type: LocationType.Import,
-        generated: true,
-        from: "vue",
-        node: null,
-        items: [
-          {
-            name: "defineComponent",
-            alias: "___VERTER_defineComponent",
-            // note could be type
-            type: false,
-          },
-        ],
-      });
-    }
-
-    locations.declaration.push({
-      type: LocationType.Declaration,
-      generated: true,
-      context: "post",
-      declaration: {
-        type: "const",
-        name: "___VERTER__ctx",
-        content: `{ ${["...(new ___VERTER_COMP___())"].join(",\n")} }`,
-      },
-    });
-
-    locations.declaration.push({
-      type: LocationType.Declaration,
-      generated: true,
-      context: "post",
-      declaration: {
-        type: "const",
-        name: "___VERTER__comp",
-        content: `{ 
-            ...({} as ExtractRenderComponents<typeof ___VERTER__ctx>),
-          }`,
-      },
-    });
-  }
-
   // add the generated declarations
   {
-    // s.prependLeft(endScriptIndex, "");
-
-    // const pre = ;
     // "global" | "pre" | "post" | "end"
 
     function declarationToString(x: TypeLocationDeclaration): string {
@@ -234,15 +239,31 @@ export function mergeFull(
       .filter((x) => x.context === "end")
       .map(declarationToString);
 
-    // TODO add global, pre, end
+    const finish = generatedDeclarations
+      .filter((x) => x.context === "finish")
+      .map(declarationToString);
+
+    // TODO add global
 
     s.prependLeft(startScriptIndex, pre.join("\n") + "\n");
 
+    const toRenderString = [...post, ...end, "return ___VERTER_COMP___;"];
+
+    // because of the way prepend works the rendering is reversed
     if (startScriptIndex === endScriptIndex) {
-      s.prependRight(endScriptIndex, post.join("\n") + "\n");
+      s.prependRight(endScriptIndex, toRenderString.join("\n"));
     } else {
-      s.prependLeft(endScriptIndex, post.join("\n") + "\n");
+      s.prependLeft(endScriptIndex, toRenderString.join("\n"));
     }
+
+    s.prependRight(
+      s.original.length,
+      [
+        finish,
+        // TODO add generic
+        `export default __VERTER__RESULT${generic ? " as something" : ""};`,
+      ].join("\n")
+    );
   }
 
   return {

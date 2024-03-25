@@ -126,7 +126,7 @@ describe("Mergers Full", () => {
 
   describe("test", () => {
     describe("script", () => {
-      it.only("should generate default option", () => {
+      it("should generate default option", () => {
         const source = `<script></script>`;
 
         const p = process(source);
@@ -140,15 +140,17 @@ describe("Mergers Full", () => {
           const ___VERTER__ctx = { ...(new ___VERTER_COMP___()) }
           const ___VERTER__comp = { 
                       ...({} as ExtractRenderComponents<typeof ___VERTER__ctx>),
+                      ...({} as { [K in keyof JSX.IntrinsicElements]: { new(): { $props: JSX.IntrinsicElements[K] } } })
                     }
-
+          return ___VERTER_COMP___;
           }
-          "
+          const __VERTER__RESULT = ___VERTER_COMPONENT__()
+          export default __VERTER__RESULT;"
         `);
         testSourceMaps(p);
       });
 
-      it("should append defineComponent", () => {
+      it.only("should append defineComponent", () => {
         const source = `<script>
                 export default {}
                 </script>`;
