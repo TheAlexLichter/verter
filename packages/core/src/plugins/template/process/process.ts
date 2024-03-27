@@ -35,6 +35,11 @@ interface ProcessContext {
    * @default "___VETER__comp"
    */
   componentAccessor?: string;
+
+  /**
+   * alias if narrowed in v-if
+   */
+  alias?: ReadonlyMap<string, string>;
 }
 
 export function process(
@@ -46,6 +51,7 @@ export function process(
     declarations: [],
     accessor: "___VERTER__ctx",
     componentAccessor: "___VERTER__comp",
+    alias: new Map<string, string>(),
   }
 ) {
   renderChildren(parsed.children, s, context);
@@ -736,6 +742,212 @@ function renderCondition(
 ) {
   const { conditions } = node;
 
+  const firstCondition = conditions[0];
+  const lastCondition = conditions[conditions.length - 1];
+
+  if (firstCondition) {
+    const firstChild =
+      firstCondition.children[0]?.type === "for"
+        ? firstCondition.children[0]?.children[0]
+        : firstCondition.children[0];
+    const childStart = firstChild.node.loc.start.offset;
+
+    // append { ()=> {
+
+    s.prependLeft(childStart, "{ ()=> {");
+
+    const lastChild =
+      lastCondition.children[lastCondition.children.length - 1]?.type === "for"
+        ? lastCondition.children[lastCondition.children.length - 1]?.children[
+            lastCondition.children[lastCondition.children.length - 1]?.children
+              .length - 1
+          ]
+        : lastCondition.children[lastCondition.children.length - 1];
+    const childEnd = lastChild.node.loc.end.offset;
+    s.appendRight(childEnd, " } }");
+  }
+  const seenAccessors = new Set([]);
+  const accessorAlias = new Map(context.alias.entries());
+
+  for (let i = 0; i < conditions.length; i++) {
+    const condition = conditions[i];
+
+    const firstChild =
+      condition.children[0]?.type === "for"
+        ? condition.children[0]?.children[0]
+        : condition.children[0];
+    const lastChild =
+      condition.children[condition.children.length - 1]?.type === "for"
+        ? condition.children[condition.children.length - 1]?.children[
+            condition.children[condition.children.length - 1]?.children.length -
+              1
+          ]
+        : condition.children[condition.children.length - 1];
+
+    const childStart = firstChild.node.loc.start.offset;
+    const childEnd = lastChild.node.loc.end.offset;
+    const conditionStart = condition.node.loc.start.offset;
+    const conditionEnd = condition.node.loc.end.offset;
+
+    const directiveStart = condition.node.loc.start.offset;
+    const directiveEnd = directiveStart + condition.node.rawName.length + 1; // with =
+
+    if (condition.directive !== "else") {
+      // move v-if/v-else-if to before the first child
+      s.move(conditionStart - 1, conditionEnd, childStart);
+    } /*else {
+      // move v-if/v-else-if to before the first child
+      s.move(conditionStart, conditionEnd, childStart + 1);
+    }*/
+
+    switch (condition.directive) {
+      case "if": {
+        // move v-if to after the expression
+
+        //remove v-
+        s.remove(directiveStart, directiveStart + 2);
+
+        // remove =
+        s.remove(directiveEnd - 1, directiveEnd);
+
+        // // replace " " with ( )
+        // s.overwrite(directiveEnd, directiveEnd + 1, "(");
+        // s.overwrite(
+        //   condition.expression.loc.end.offset,
+        //   condition.expression.loc.end.offset + 1,
+        //   ")"
+        // );
+
+        // // now the expression is at childStart
+        // s.move(directiveStart, directiveEnd, childStart);
+
+        // // replace v-if with ?
+        // s.overwrite(directiveStart, directiveEnd, "?");
+
+        // add accessors
+
+        // replace v-if with
+        break;
+      }
+      case "else-if": {
+        // now the expression is at childStart
+        s.move(directiveStart, directiveEnd, childStart);
+
+        // replace v-else-if with ?
+        s.overwrite(directiveStart, directiveEnd, "?");
+        break;
+      }
+      case "else": {
+        // // now the expression is at childStart
+        // directive end contains `=`
+        s.move(directiveStart, directiveEnd - 1, childStart);
+
+        // replave v-else with :
+        s.overwrite(directiveStart, directiveEnd - 1, " else ");
+        // s.move(directiveStart, directiveStart + 1, childStart);
+
+        break;
+      }
+    }
+
+    // add wrap { } to children
+
+    if ("expression" in condition && condition.expression) {
+      const expression = condition.expression as ExpressionNode;
+
+      if (expression.ast) {
+        // const accessor = Array.from(
+        //   retrieveAccessors(expression.ast, context)
+        // );
+        for (const it of retrieveAccessors(expression.ast, context)) {
+          if (!seenAccessors.has(it)) {
+            seenAccessors.add(it);
+            const alias = accessorAlias.get(it);
+            const resolvedName = alias ?? it;
+            const newAlias = `${resolvedName.replaceAll(".", "_")}_narrow`;
+
+            accessorAlias.set(it, newAlias);
+          }
+        }
+      }
+
+      // replace delimiters with ()
+      s.overwrite(
+        expression.loc.start.offset - 1,
+        expression.loc.start.offset,
+        // (condition.directive === "else-if" ? "}" : "") + "("
+        "("
+      );
+      s.overwrite(
+        expression.loc.end.offset,
+        expression.loc.end.offset + 1,
+        ")"
+      );
+
+      retrieveStringExpressionNode(expression, s, context, true);
+    }
+    // append new accessors
+    let overriddenContext = context;
+    if (accessorAlias.size) {
+      // const prevAccessor = context.accessor + ".";
+      // const accessor = context.accessor + "_narrower";
+
+      // const newAccessorStr = `\nconst ${accessor} = {...${
+      //   context.accessor
+      // }, ${expressionAccessors.map(
+      //   (x) => `${x.replace(prevAccessor, "")}: ${x}`
+      // )}};\n`;
+
+      // const narrowedNames = expressionAccessors
+      //   .map(
+      //     (x) =>
+      //       [x, context.alias.get(x)] as [name: string, alias: string | null]
+      //   )
+      //   .map(([name, alias]) => {
+      //     const resolvedName = alias ?? name;
+      //     const newAlias = `${resolvedName}_narrow`;
+      //     context.alias.set(resolvedName, newAlias);
+
+      //     return [resolvedName, alias] as [original: string, newAlias: string];
+      //   })
+      const narrowedNames = Array.from(accessorAlias.entries())
+        .map(([name, alias]) => `const ${[alias, name].join(" = ")};`)
+        .join("\n");
+
+      s.prependRight(childStart, narrowedNames);
+
+      overriddenContext = {
+        ...context,
+        alias: accessorAlias,
+      };
+    }
+
+    renderChildren(
+      condition.children.map((x) => {
+        if (x.type === "for") {
+          // prevent wrapping of the for loop
+          x.NO_WRAP = true;
+        }
+        return x;
+      }),
+      s,
+      overriddenContext
+    );
+
+    if (condition.children.length > 0) {
+      // add {  }
+      s.prependRight(childStart, "{");
+      s.prependLeft(childEnd, "}");
+    }
+  }
+}
+function renderConditionOld(
+  node: ParsedNodeBase & { conditions: ParsedNodeBase[] },
+  s: MagicString,
+  context: ProcessContext
+) {
+  const { conditions } = node;
+
   let hasElse = false;
 
   const firstCondition = conditions[0];
@@ -1223,7 +1435,38 @@ function appendCtx(
   if (StaticNodeTypes.has(node.type) || node.type?.endsWith?.("Literal"))
     return content;
 
+  // resolve the last alias
   const accessor = context.accessor;
+  const res = `${accessor}.${content}`;
+  let alias = res;
+  do {
+    let newAlias = context.alias.get(alias);
+    // if there's no more alias
+    if (!newAlias && alias !== content) {
+      if (s) {
+        // node.loc.start.index is babel accessing, the first char pos is 1
+        // instead of zero-based
+        const start =
+          (node.loc ? node.loc.start.offset ?? node.loc.start.index - 1 : 0) +
+          __offset;
+        const end =
+          (node.loc ? node.loc.end.offset ?? node.loc.end.index - 1 : 0) +
+          __offset;
+        // there's a case where the offset is off
+        if (s.original.slice(start, end) !== content) {
+          s.overwrite(start + 1, end + 1, alias);
+          // s.prependRight(start + 1, `${accessor}.`);
+        } else {
+          // s.prependRight(start, `${accessor}.`);
+          s.overwrite(start, end, alias);
+        }
+      }
+
+      return alias;
+    }
+    alias = newAlias;
+  } while (alias);
+
   if (s) {
     // node.loc.start.index is babel accessing, the first char pos is 1
     // instead of zero-based
@@ -1240,5 +1483,37 @@ function appendCtx(
     }
   }
 
-  return `${accessor}.${content}`;
+  return res;
+}
+
+function* retrieveAccessors(
+  node:
+    | _babel_types.BinaryExpression
+    | _babel_types.Identifier
+    | _babel_types.PrivateName
+    | _babel_types.Expression,
+  context: ProcessContext
+) {
+  switch (node.type) {
+    case "BinaryExpression": {
+      yield* retrieveAccessors(node.left, context);
+      yield* retrieveAccessors(node.right, context);
+      break;
+    }
+    case "Identifier": {
+      yield appendCtx(node, undefined, context);
+      break;
+    }
+    case "PrivateName": {
+      yield* retrieveAccessors(node.id, context);
+      break;
+    }
+
+    case "MemberExpression": {
+      const obj = retrieveAccessors(node.object, context).next().value
+      const property = node.property.name;
+      yield appendCtx(`${obj}.${property}`, undefined, context);
+      break;
+    }
+  }
 }

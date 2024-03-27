@@ -24,3 +24,16 @@ export type ExtractRenderComponents<T> = OmitNever<{
   [K in keyof Omit<T, keyof ComponentPublicInstance>]: ExtractComponent<T[K]>;
 }> &
   GlobalComponents & {};
+
+type DeepMergerNarrower<T extends Record<PropertyKey, any>[]> = T extends [
+  infer A,
+  ...infer Rest
+]
+  ? Rest extends Record<PropertyKey, any>[]
+    ? A & DeepMergerNarrower<Rest>
+    : A
+  : {};
+
+declare function deepMergerNarrower<T extends Record<PropertyKey, any>[]>(
+  ...args: T
+): DeepMergerNarrower<T>;

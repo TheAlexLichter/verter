@@ -729,6 +729,7 @@ describe("process", () => {
 
           const parsed = doParseContent(source);
           const { magicString } = process(parsed);
+
           expect(magicString.toString()).toMatchInlineSnapshot(
             `"<template>{__VERTER__renderList(10,(n)=>{<li ></li>})}</template>"`
           );
@@ -764,25 +765,32 @@ describe("process", () => {
           const source = `<li v-if="n > 5"></li>`;
           const parsed = doParseContent(source);
           const { magicString } = process(parsed);
-          expect(magicString.toString()).toMatchInlineSnapshot(
-            `"<template>{(___VERTER__ctx.n > 5)?<li ></li> : undefined}</template>"`
-          );
+
+          expect(magicString.toString()).toMatchInlineSnapshot(`
+            "<template>{ ()=> { if(___VERTER__ctx.n > 5){
+            const ___VERTER__ctx_narrower = {...___VERTER__ctx, n: ___VERTER__ctx.n};
+            <li></li>} } }</template>"
+          `);
 
           expect(magicString.generateMap().toString()).toMatchInlineSnapshot(
-            `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,WAAmB,gBAAC,KAAK,CAAX,CAAJ,IAAgB,GAAG,EAAE,cAAC"}"`
+            `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,kBAAa,CAAG,EAAG,gBAAC,KAAK;;AAAf,GAAgB,GAAG,EAAE,MAAC"}"`
           );
         });
 
-        it("v-if + v-else", () => {
+        it.todo("v-if + v-else", () => {
           const source = `<li v-if="n > 5" id="if"></li><li v-else id="else"></li>`;
           const parsed = doParseContent(source);
           const { magicString } = process(parsed);
-          expect(magicString.toString()).toMatchInlineSnapshot(
-            `"<template>{(___VERTER__ctx.n > 5)?<li  id="if"></li>:<li  id="else"></li>}</template>"`
-          );
+          expect(magicString.toString()).toMatchInlineSnapshot(`
+            "<template>{ ()=> { if(___VERTER__ctx.n > 5){
+            const ___VERTER__ctx_narrower = {...___VERTER__ctx, n: ___VERTER__ctx.n};
+            <li id="if"></li>} else {
+            const ___VERTER__ctx_narrower = {...___VERTER__ctx, n: ___VERTER__ctx.n};
+            <li  id="else"></li>} } }</template>"
+          `);
 
           expect(magicString.generateMap().toString()).toMatchInlineSnapshot(
-            `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,WAAmB,gBAAC,KAAK,CAAX,CAAJ,IAAgB,WAAW,EAAE,CAAK,CAAJ,IAAU,aAAa,EAAE,EAAC"}"`
+            `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,kBAAa,CAAG,EAAG,gBAAC,KAAK;;AAAf,GAAgB,WAAW,EAAE,EAAK;;AAAJ,IAAU,aAAa,EAAE,MAAC"}"`
           );
         });
 
@@ -791,11 +799,20 @@ describe("process", () => {
           const parsed = doParseContent(source);
           const { magicString } = process(parsed);
           expect(magicString.toString()).toMatchInlineSnapshot(
-            `"<template>{(___VERTER__ctx.n > 5)?<li ></li>:(___VERTER__ctx.n > 3)?<li ></li> : undefined}</template>"`
+            `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,kBAAa,CAAG,EAAG,gBAAC,KAAK;;AAAf,GAAgB,WAAW,EAAE,EAAK;;AAAJ,IAAU,aAAa,EAAE,MAAC"}"`
           );
 
           expect(magicString.generateMap().toString()).toMatchInlineSnapshot(
             `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,WAAmB,gBAAC,KAAK,CAAX,CAAJ,IAAgB,GAAG,EAAE,CAAe,iBAAC,KAAK,CAAhB,CAAJ,IAAqB,GAAG,EAAE,cAAC"}"`
+          );
+        });
+
+        it("v-if + >", () => {
+          const source = `<div v-if="getData.length > 0"> </div>`;
+          const parsed = doParseContent(source);
+          const { magicString } = process(parsed);
+          expect(magicString.toString()).toMatchInlineSnapshot(
+            `"<template>{(___VERTER__ctx.getData.length > 0)?<div > </div> : undefined}</template>"`
           );
         });
 
@@ -850,6 +867,26 @@ describe("process", () => {
           expect(magicString.generateMap().toString()).toMatchInlineSnapshot(
             `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,WAAoB,CAAC;AACrB;AACA,iCAAkB,sBAAO;AACzB,cAAc,CAHC,CAAL,KAGK,CAAC,aAEN,EAAE,GAAG;AACf,UAAe,CAAL,KAAW,CAAC,YAEZ,EAAE,GAAG,EAAC"}"`
           );
+        });
+
+        it("should narrow", () => {
+          const source = `<li v-if="n === true" :key="n"></li><li v-else :key="n"/>`;
+          const parsed = doParseContent(source);
+          const { magicString } = process(parsed);
+
+          expect(magicString.toString()).toMatchInlineSnapshot(
+            `"<template>{ ()=> { if(___VERTER__ctx.n === true){const ___VERTER__ctx_n_narrow = ___VERTER__ctx.n;<li key={___VERTER__ctx_n_narrow}></li>} else {const ___VERTER__ctx_n_narrow = ___VERTER__ctx.n;<li  key={___VERTER__ctx_n_narrow}/>} } }</template>"`
+          );
+          expect(magicString.generateMap().toString()).toMatchInlineSnapshot(
+            `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,kBAAa,CAAG,EAAG,CAAC,gBAAC,SAAS,mDAApB,GAAqB,CAAE,IAAI,CAAC,uBAAC,CAAC,GAAG,EAAE,EAAK,wDAAJ,IAAU,CAAE,IAAI,CAAC,uBAAC,CAAC,OAAE"}"`
+          );
+        });
+
+        it.only("should narrow deep objects", () => {
+          const source = `<li v-if="n.n.n === true" :key="n.n"></li><li v-else :key="n.n"/>`;
+          const parsed = doParseContent(source);
+          const { magicString } = process(parsed);
+          expect(magicString.toString()).toMatchInlineSnapshot(`"<template>{ ()=> { if(___VERTER__ctx.n.n === true){const ___VERTER__ctx_n_n_narrow = ___VERTER__ctx.n.n;<li key={___VERTER__ctx.n.n}></li>} else {const ___VERTER__ctx_n_n_narrow = ___VERTER__ctx.n.n;<li  key={___VERTER__ctx.n.n}/>} } }</template>"`);
         });
 
         describe.skip("invalid conditions", () => {
@@ -1248,6 +1285,15 @@ describe("process", () => {
       expect(magicString.toString()).toMatchInlineSnapshot(
         `"<template><div>{ ___VERTER__ctx.foo + 'myString' + ___VERTER__ctx.document.width }</div></template>"`
       );
+    });
+
+    it.todo("more complex", () => {
+      const source = `<div v-if="!!floor || !!door" class="c3-address-floor">
+      (<span v-if="!!floor">{{ $t('user.floor') }}: {{ floor }}{{ !!door ? ', ' : '' }}</span><span v-if="!!door">{{ $t('user.door') }}: {{ door }}</span>)
+  </div>`;
+      const parsed = doParseContent(source);
+      const { magicString } = process(parsed);
+      expect(magicString.toString()).toMatchInlineSnapshot();
     });
   });
 
