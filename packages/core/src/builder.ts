@@ -12,7 +12,6 @@ import {
   SFCDescriptor,
   SFCScriptCompileOptions,
   compileScript,
-  compileTemplate,
   parse,
 } from "@vue/compiler-sfc";
 
@@ -55,10 +54,20 @@ export function createBuilder(config?: Partial<BuilderOptions>) {
 
   return {
     preProcess(filename: string, source: string, ignoreScript = false) {
+      const originalSouce = source;
+      // add empty script at the end
+      if (
+        source.indexOf("</script>") === -1 &&
+        source.indexOf("<script ") === -1 &&
+        source.indexOf("<script>") === -1
+      ) {
+        source += `\n<script></script>\n`;
+      }
+
       const parsed = parse(source, {
         filename,
-        // ignoreEmpty: true,
         sourceMap: true,
+        ignoreEmpty: false,
       });
 
       const compiled =

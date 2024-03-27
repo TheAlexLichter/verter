@@ -1,12 +1,12 @@
 // import { generateScript } from "../dist/index.js";
-import { createBuilder } from "../dist/index.js";
+import { createBuilder, mergeFull } from "../dist/index.js";
 import { glob } from "glob";
 import { dirname } from "path";
 import fs from "fs-extra";
 import { parse } from "@vue/compiler-sfc";
 
-// const genFiles = glob.sync("./generator/**/_gen.ts");
-const genFiles = glob.sync("./generator/**/import/_gen.ts");
+const genFiles = glob.sync("./generator/**/_gen.ts");
+// const genFiles = glob.sync("./generator/**/import/_gen.ts");
 // const genFiles = glob.sync("./generator/**/slots-typed/_gen.ts");
 // const genFiles = glob.sync("./generator/**/template/**/_gen.ts");
 
@@ -33,8 +33,9 @@ async function processDir(dir) {
   //   filename: "Comp.vue",
   //   templateParseOptions: {},
   // });
-  //   console.log('parsed', parsed)
-  const output = builder.process("Comp.vue", compFile);
+  console.log("generating for ", compFilePath);
+  const processed = builder.preProcess("Comp.vue", compFile);
+  const output = mergeFull(processed.locations, processed.context);
   // .replace(
   //   "export default __options as __COMP__",
   //   "const Comp = __options as any as __COMP__;"
@@ -42,8 +43,8 @@ async function processDir(dir) {
 
   await fs.outputFile(
     outputFilePath,
-    "/* @jsxImportSource vue */\n" +
-      genFile.replace("type __COMP__ = {};", output),
+    // "/* @jsxImportSource vue */\n" +
+    genFile.replace("type __COMP__ = {};", output.content),
     {
       encoding: "utf8",
       // flag: "w",

@@ -566,11 +566,14 @@ function renderText(
   s: MagicString,
   context: ProcessContext
 ) {
-  s.overwrite(
-    node.node.loc.start.offset,
-    node.node.loc.end.offset,
-    `{ ${JSON.stringify(node.content)} }`
-  );
+  // if has content besides whitespace
+  if (node.content.trim()) {
+    s.overwrite(
+      node.node.loc.start.offset,
+      node.node.loc.end.offset,
+      `{ ${JSON.stringify(node.content)} }`
+    );
+  }
 }
 
 function renderFor(

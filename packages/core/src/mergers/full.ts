@@ -162,7 +162,8 @@ export function mergeFull(
               x.declaration.name ??
               x.node.declarations?.flatMap(
                 (x) =>
-                  x.id.name ?? x.id.properties.map((p) => p.name ?? p.key.name)
+                  x.id.name ??
+                  x.id.properties.map((p) => p.name ?? p.value.name)
               ) ??
               x.node.id?.name
           )

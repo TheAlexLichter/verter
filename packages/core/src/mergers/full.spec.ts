@@ -1137,9 +1137,23 @@ describe("Mergers Full", () => {
     `);
   });
 
-  it("it should unref ", () => {
+  it("it should unref on object deconstructor", () => {
     const source = `<script setup lang="ts">
-    const { test } = { test: 1 }
+    const { testX } = { test: 1 }
+    </script>
+    `;
+
+    const p = process(source);
+
+    expect(p.source).toBe(source);
+
+    expect(p.content).toContain("unref(testX)");
+    testSourceMaps(p);
+  });
+
+  it("it should unref on object deconstructor + alias", () => {
+    const source = `<script setup lang="ts">
+    const { notTheTestYouLookingFor: test } = { test: 1 }
     </script>
     `;
 
@@ -1149,5 +1163,39 @@ describe("Mergers Full", () => {
 
     expect(p.content).toContain("unref(test)");
     testSourceMaps(p);
+  });
+
+  it.only("no script", () => {
+    const source = `<template><span>1</span></template>`;
+
+    const p = process(source);
+
+    expect(p.content).toMatchInlineSnapshot(`
+      "/* @jsxImportSource vue */
+      import 'vue/jsx';
+      import { defineComponent as ___VERTER_defineComponent } from 'vue';
+
+
+      function ___VERTER_COMPONENT__() {
+      const ____VERTER_COMP_OPTION__ = ___VERTER_defineComponent({})
+      function ___VERTER__TEMPLATE_RENDER() {
+      <><span>{ "1" }</span>
+      </>}
+      ___VERTER__TEMPLATE_RENDER();
+      const ___VERTER_COMP___ = ____VERTER_COMP_OPTION__
+      const ___VERTER__ctx = { ...({} as InstanceType<typeof ___VERTER_COMP___>) }
+      const ___VERTER__comp = { 
+                  //...({} as ExtractRenderComponents<typeof ___VERTER__ctx>),
+                  ...({} as { [K in keyof JSX.IntrinsicElements]: { new(): { $props: JSX.IntrinsicElements[K] } } }),
+                  ...___VERTER__ctx
+                }
+      ___VERTER__comp;
+      ___VERTER__ctx;
+      return ___VERTER_COMP___;
+      }
+
+      const __VERTER__RESULT = ___VERTER_COMPONENT__();
+      export default __VERTER__RESULT;"
+    `);
   });
 });

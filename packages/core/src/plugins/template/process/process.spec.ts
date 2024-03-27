@@ -290,7 +290,9 @@ describe("process", () => {
 
       const parsed = doParseContent(source);
       const { magicString } = process(parsed);
-      expect(magicString.toString()).toMatchInlineSnapshot(`"<template><span checkForSomething={\`foo=\${___VERTER__ctx.bar}\`}></span></template>"`);
+      expect(magicString.toString()).toMatchInlineSnapshot(
+        `"<template><span checkForSomething={\`foo=\${___VERTER__ctx.bar}\`}></span></template>"`
+      );
     });
 
     describe("events", () => {
@@ -1162,6 +1164,20 @@ describe("process", () => {
         "<template>{ /* @ts-expect-error this is expected to fail */ }
               <___VERTER__comp.ThisDoesNotExist />
               </template>"
+      `);
+    });
+    it("should keep", () => {
+      const source = `<div>
+      <!-- @ts-expect-error -->
+      {{ bar }}
+    </div>`;
+      const parsed = doParseContent(source);
+      const { magicString } = process(parsed);
+      expect(magicString.toString()).toMatchInlineSnapshot(`
+        "<template><div>
+              { /* @ts-expect-error */ }
+              { ___VERTER__ctx.bar }
+            </div></template>"
       `);
     });
 

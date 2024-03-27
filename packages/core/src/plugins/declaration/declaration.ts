@@ -13,11 +13,9 @@ const supportedTypes = new Set([
   "ExportNamedDeclaration",
 ] as Array<babel_types.Node["type"]>);
 
-const globalDeclarations = new Set([
-  // "InterfaceDeclaration",
-  // "TSTypeAliasDeclaration",
-  "ExportNamedDeclaration",
-] as Array<babel_types.Node["type"]>);
+const globalDeclarations = new Set(["ExportNamedDeclaration"] as Array<
+  babel_types.Node["type"]
+>);
 
 export default {
   name: "Declaration",
