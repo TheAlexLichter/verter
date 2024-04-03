@@ -22,7 +22,13 @@ import type * as _babel_types from "@babel/types";
 const isLiteralWhitelisted = /*#__PURE__*/ makeMap("true,false,null,this");
 
 interface ProcessContext {
+  // prevent the identifiers from getting the accessor prefixed
+  // for example the v-for="item in items" has "item" added, because
+  // is a blocked variable
   ignoredIdentifiers?: string[];
+
+  // expose declarations, in case we need to import something
+  // or declare a specific variable
   declarations?: WalkResult[];
 
   /**
@@ -35,6 +41,13 @@ interface ProcessContext {
    * @default "___VETER__comp"
    */
   componentAccessor?: string;
+
+  conditions: {
+    // current conditions
+    ifs: string[];
+    // other conditions
+    elses: string[];
+  };
 }
 
 export function process(
@@ -46,6 +59,10 @@ export function process(
     declarations: [],
     accessor: "___VERTER__ctx",
     componentAccessor: "___VERTER__comp",
+    conditions: {
+      ifs: [],
+      elses: [],
+    },
   }
 ) {
   renderChildren(parsed.children, s, context);
@@ -109,7 +126,8 @@ const render = {
   // [ParsedType.RenderSlot]: renderSlot,
   [ParsedType.Comment]: renderComment,
   [ParsedType.Interpolation]: renderInterpolation,
-  [ParsedType.Condition]: renderCondition,
+  // [ParsedType.Condition]: renderCondition,
+  [ParsedType.Condition]: renderConditionBetter,
 };
 
 function renderNode(
@@ -258,13 +276,7 @@ function renderAttributes(
           console.error("Unknown error happened!!!");
         }
         if (node.exp) {
-          retrieveStringExpressionNode(
-            node.exp,
-            s,
-            context,
-            true,
-            node.exp.loc.start.offset
-          );
+          retrieveStringExpressionNode(node.exp, s, context, true);
         }
       }
 
@@ -327,13 +339,7 @@ function renderAttributes(
         }
 
         if (node.exp) {
-          retrieveStringExpressionNode(
-            node.exp,
-            s,
-            context,
-            true,
-            node.exp.loc.start.offset
-          );
+          retrieveStringExpressionNode(node.exp, s, context, true);
         }
       }
     } catch (e) {
@@ -412,7 +418,8 @@ function renderAttribute(
           s,
           context,
           true,
-          n.exp.loc.start.offset
+          -1, // - (n.rawName[0] === ":" ? 1 : 0),
+          true
         );
       }
 
@@ -507,12 +514,13 @@ function renderAttribute(
       }
 
       if (n.exp) {
+        // TODO wrap expression in ()=>  + conditions
         retrieveStringExpressionNode(
           n.exp,
           s,
           context,
-          true,
-          n.exp.loc.start.offset
+          true
+          // n.exp.loc.start.offset
         );
       }
 
@@ -907,6 +915,181 @@ function renderConditionNarrowed(
     }
   }
 }
+
+function renderConditionBetter(
+  node: ParsedNodeBase & { conditions: ParsedNodeBase[] },
+  s: MagicString,
+  context: ProcessContext
+) {
+  const { conditions } = node;
+
+  let hasElse = false;
+
+  const firstCondition = conditions[0];
+  const lastCondition = conditions[conditions.length - 1];
+
+  if (firstCondition) {
+    const firstChild =
+      firstCondition.children[0]?.type === "for"
+        ? firstCondition.children[0]?.children[0]
+        : firstCondition.children[0];
+    const childStart = firstChild.node.loc.start.offset;
+    s.prependLeft(childStart, "{");
+
+    const lastChild =
+      lastCondition.children[lastCondition.children.length - 1]?.type === "for"
+        ? lastCondition.children[lastCondition.children.length - 1]?.children[
+            lastCondition.children[lastCondition.children.length - 1]?.children
+              .length - 1
+          ]
+        : lastCondition.children[lastCondition.children.length - 1];
+    const childEnd = lastChild.node.loc.end.offset;
+    s.appendRight(childEnd, "}");
+  }
+
+  const conditionsContent: string[] = [];
+
+  for (let i = 0; i < conditions.length; i++) {
+    const condition = conditions[i];
+
+    const firstChild =
+      condition.children[0]?.type === "for"
+        ? condition.children[0]?.children[0]
+        : condition.children[0];
+    const lastChild =
+      condition.children[condition.children.length - 1]?.type === "for"
+        ? condition.children[condition.children.length - 1]?.children[
+            condition.children[condition.children.length - 1]?.children.length -
+              1
+          ]
+        : condition.children[condition.children.length - 1];
+
+    const childStart = firstChild.node.loc.start.offset;
+    const childEnd = lastChild.node.loc.end.offset;
+    const conditionStart = condition.node.loc.start.offset;
+    const conditionEnd = condition.node.loc.end.offset;
+
+    const directiveStart = condition.node.loc.start.offset;
+    const directiveEnd = directiveStart + condition.node.rawName.length + 1; // with =
+
+    if (condition.directive !== "else") {
+      // move v-if/v-else-if to before the first child
+      s.move(conditionStart, conditionEnd, childStart);
+
+      // add {  }
+      //   s.appendLeft(childStart, "{");
+      //   s.appendLeft(childEnd, "}");
+    } /*else {
+      // move v-if/v-else-if to before the first child
+      s.move(conditionStart, conditionEnd, childStart + 1);
+    }*/
+
+    switch (condition.directive) {
+      case "if": {
+        // move v-if to after the expression
+
+        // now the expression is at childStart
+        s.move(directiveStart, directiveEnd, childStart);
+
+        // replace v-if with ?
+        s.overwrite(directiveStart, directiveEnd, "?");
+        break;
+      }
+      case "else-if": {
+        // now the expression is at childStart
+        s.move(directiveStart, directiveEnd, childStart);
+
+        // replace v-else-if with ?
+        s.overwrite(directiveStart, directiveEnd, "?");
+        break;
+      }
+      case "else": {
+        // // now the expression is at childStart
+        // directive end contains `=`
+        s.move(directiveStart, directiveEnd - 1, childStart);
+
+        // replave v-else with :
+        s.overwrite(directiveStart, directiveEnd - 1, ":");
+        // s.move(directiveStart, directiveStart + 1, childStart);
+        hasElse = true;
+
+        break;
+      }
+    }
+
+    if ("expression" in condition && condition.expression) {
+      const expression = condition.expression as ExpressionNode;
+
+      // replace delimiters with ()
+      s.overwrite(
+        expression.loc.start.offset - 1,
+        expression.loc.start.offset,
+        (condition.directive === "else-if" ? ":" : "") + "("
+      );
+      s.overwrite(
+        expression.loc.end.offset,
+        expression.loc.end.offset + 1,
+        ")"
+      );
+
+      retrieveStringExpressionNode(expression, s, context, true);
+    }
+
+    // s.overwrite(conditionStart - 1, conditionStart)
+
+    // renderConditionNode(condition, s, context);
+
+    // for (let i = 0; i < condition.children.length; i++) {
+    //   const child = condition.children[i];
+    //   renderNode(child, s, context);
+    // }
+
+    let currentCondition = condition.expression
+      ? s.snip(conditionStart, conditionEnd).toString()
+      : "";
+    // there's an ? on the last because of moving
+    if (currentCondition.endsWith("?")) {
+      currentCondition = currentCondition.slice(0, -1);
+    }
+
+    renderChildren(
+      condition.children.map((x) => {
+        if (x.type === "for") {
+          // prevent wrapping of the for loop
+          x.NO_WRAP = true;
+        }
+        return x;
+      }),
+      s,
+      {
+        ...context,
+        conditions: {
+          ifs: [...context.conditions.ifs, currentCondition].filter(Boolean),
+          elses: [...context.conditions.elses, ...conditionsContent],
+        },
+      }
+    );
+
+    if (currentCondition) {
+      conditionsContent.push(currentCondition);
+    }
+  }
+
+  if (!hasElse) {
+    const lastCondition = conditions[conditions.length - 1];
+
+    const lastChild =
+      lastCondition.children[lastCondition.children.length - 1]?.type === "for"
+        ? lastCondition.children[lastCondition.children.length - 1]?.children[
+            lastCondition.children[lastCondition.children.length - 1]?.children
+              .length - 1
+          ]
+        : lastCondition.children[lastCondition.children.length - 1];
+    const childEnd = lastChild.node.loc.end.offset;
+    s.prependRight(childEnd, " : undefined");
+  }
+}
+
 function renderCondition(
   node: ParsedNodeBase & { conditions: ParsedNodeBase[] },
   s: MagicString,
@@ -1181,7 +1364,8 @@ function retrieveStringExpressionNode(
   s: MagicString | undefined,
   context: ProcessContext,
   prepend = true,
-  overrideOffset = -1
+  overrideOffset = -1,
+  narrowConditions = false
 ) {
   if (!node) return undefined;
   switch (node.type) {
@@ -1193,8 +1377,17 @@ function retrieveStringExpressionNode(
         return prepend ? appendCtx(node, s, context) : node.content;
       }
       const offset =
-        overrideOffset >= 0 ? overrideOffset : node.loc.start.offset - 1;
-      return parseNodeText(node.ast, s, context, offset, prepend);
+        overrideOffset >= 0
+          ? overrideOffset
+          : node.loc.start.offset - node.ast.start;
+      return parseNodeText(
+        node.ast,
+        s,
+        context,
+        offset,
+        prepend,
+        narrowConditions
+      );
     }
     case NodeTypes.COMPOUND_EXPRESSION: {
       return "NOT_KNOWN COMPOUND_EXPRESSION";
@@ -1212,7 +1405,8 @@ function parseNodeText(
   s: MagicString | undefined,
   context: ProcessContext,
   offset: number,
-  prepend = true
+  prepend = true,
+  narrowConditions = false
 ) {
   if (Array.isArray(node)) {
     return node.forEach((x) => parseNodeText(x, s, context, offset, prepend));
@@ -1273,20 +1467,46 @@ function parseNodeText(
   if ("elements" in node) {
     node.elements &&
       node.elements.forEach((p) =>
-        parseNodeText(p, s, context, offset - 1, prepend)
+        parseNodeText(p, s, context, offset, prepend)
       );
   }
 
+  let testCondition = "";
   if ("test" in node) {
-    node.test && parseNodeText(node.test, s, context, offset, prepend);
+    if (node.test) {
+      parseNodeText(node.test, s, context, offset, prepend);
+      testCondition = s
+        .snip(offset + node.test.start, offset + node.test.end)
+        .toString();
+    }
   }
+
   if ("consequent" in node) {
+    const c = testCondition
+      ? {
+          ...context,
+          conditions: {
+            ...context.conditions,
+            ifs: [...context.conditions.ifs, testCondition],
+          },
+        }
+      : context;
+
     node.consequent &&
-      parseNodeText(node.consequent, s, context, offset, prepend);
+      parseNodeText(node.consequent, s, c, offset, prepend, narrowConditions);
   }
   if ("alternate" in node) {
+    const c = testCondition
+      ? {
+          ...context,
+          conditions: {
+            ...context.conditions,
+            elses: [...context.conditions.elses, testCondition],
+          },
+        }
+      : context;
     node.alternate &&
-      parseNodeText(node.alternate, s, context, offset, prepend);
+      parseNodeText(node.alternate, s, c, offset, prepend, narrowConditions);
   }
 
   if ("left" in node) {
@@ -1312,7 +1532,8 @@ function parseNodeText(
     case "MemberExpression": {
       node.object && parseNodeText(node.object, s, context, offset);
       // computed is true if is access []
-      node.property && parseNodeText(node.property, s, context, offset, node.computed);
+      node.property &&
+        parseNodeText(node.property, s, context, offset, node.computed);
       break;
     }
     case "OptionalMemberExpression": {
@@ -1359,14 +1580,26 @@ function parseNodeText(
     case "UnaryExpression": {
       break;
     }
+    case "FunctionExpression":
     case "ArrowFunctionExpression": {
+      if (narrowConditions) {
+        const hasBlock = node.body.type === "BlockStatement";
+        const bodyStartOffset =
+          offset + (hasBlock ? node.body.body[0].start : node.body.start);
+
+        const narrowCondition = generateNarrowCondition(context, hasBlock);
+
+        if (narrowCondition) {
+          s.prependLeft(bodyStartOffset, narrowCondition);
+        }
+      }
       break;
     }
     case "ObjectProperty": {
       if (node.shorthand) {
         const v = appendCtx(node.key, undefined, context);
 
-        s.appendLeft(offset + node.key.loc.end.index - 1, `:${v}`);
+        s.appendLeft(offset + node.key.loc.end.index, `:${v}`);
       } else {
         if (node.key.type !== "Identifier") {
           parseNodeText(node.key, s, context, offset);
@@ -1379,6 +1612,23 @@ function parseNodeText(
       break;
     }
   }
+}
+
+function generateNarrowCondition(context: ProcessContext, isBlock = false) {
+  const toNegate = context.conditions.ifs.join(" && ");
+  const conditions = [
+    toNegate ? `!(${toNegate})` : "",
+    ...context.conditions.elses,
+  ]
+    .filter(Boolean)
+    .join(" || ");
+
+  if (!conditions) return "";
+
+  if (isBlock) {
+    return `if(${conditions}) { return; } `;
+  }
+  return `${conditions} ? undefined : `;
 }
 
 const StaticNodeTypes = new Set<keyof _babel_types.ParentMaps>([

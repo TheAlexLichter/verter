@@ -775,20 +775,16 @@ describe("process", () => {
           );
         });
 
-        it.todo("v-if + v-else", () => {
+        it("v-if + v-else", () => {
           const source = `<li v-if="n > 5" id="if"></li><li v-else id="else"></li>`;
           const parsed = doParseContent(source);
           const { magicString } = process(parsed);
-          expect(magicString.toString()).toMatchInlineSnapshot(`
-            "<template>{ ()=> { if(___VERTER__ctx.n > 5){
-            const ___VERTER__ctx_narrower = {...___VERTER__ctx, n: ___VERTER__ctx.n};
-            <li id="if"></li>} else {
-            const ___VERTER__ctx_narrower = {...___VERTER__ctx, n: ___VERTER__ctx.n};
-            <li  id="else"></li>} } }</template>"
-          `);
+          expect(magicString.toString()).toMatchInlineSnapshot(
+            `"<template>{(___VERTER__ctx.n > 5)?<li  id="if"></li>:<li  id="else"></li>}</template>"`
+          );
 
           expect(magicString.generateMap().toString()).toMatchInlineSnapshot(
-            `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,kBAAa,CAAG,EAAG,gBAAC,KAAK;;AAAf,GAAgB,WAAW,EAAE,EAAK;;AAAJ,IAAU,aAAa,EAAE,MAAC"}"`
+            `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,WAAmB,gBAAC,KAAK,CAAX,CAAJ,IAAgB,WAAW,EAAE,CAAK,CAAJ,IAAU,aAAa,EAAE,EAAC"}"`
           );
         });
 
@@ -880,17 +876,50 @@ describe("process", () => {
           );
         });
 
-        it.todo("should narrow deep objects", () => {
-          const source = `<li v-if="n.n.n === true" :key="n.n"></li><li v-else :key="n.n"/>`;
-          const parsed = doParseContent(source);
-          const { magicString } = process(parsed);
-          expect(magicString.toString()).toMatchInlineSnapshot(`
-            "<template>{ ()=> { if(___VERTER__ctx.n.n.n === true){
-            const ___VERTER__ctx_narrower = {...___VERTER__ctx, ___VERTER__ctx.___VERTER__ctx.n.n.n: ___VERTER__ctx.___VERTER__ctx.___VERTER__ctx.n.n.n};
-            <li key={___VERTER__ctx.n.n}></li>} else {
-            const ___VERTER__ctx_narrower = {...___VERTER__ctx, ___VERTER__ctx.___VERTER__ctx.n.n.n: ___VERTER__ctx.___VERTER__ctx.___VERTER__ctx.n.n.n};
-            <li  key={___VERTER__ctx.n.n}/>} } }</template>"
-          `);
+        describe("narrow", () => {
+          it("arrow function", () => {
+            const source = `<li v-if="n.n.n === true" :onClick="()=> n.n.n === false ? 1 : undefined"></li><li v-else :onClick="()=> n.n.n === true ? 1 : undefined"/>`;
+            const parsed = doParseContent(source);
+            const { magicString } = process(parsed);
+
+            // NOTE the resulted snapshot should give an error with typescript in the correct environment
+            expect(magicString.toString()).toMatchInlineSnapshot(
+              `"<template>{(___VERTER__ctx.n.n.n === true)?<li  onClick={()=> !((___VERTER__ctx.n.n.n === true)) ? undefined : ___VERTER__ctx.n.n.n === false ? 1 : undefined}></li>:<li  onClick={()=> (___VERTER__ctx.n.n.n === true) ? undefined : ___VERTER__ctx.n.n.n === true ? 1 : undefined}/>}</template>"`
+            );
+          });
+          it("arrow function with return", () => {
+            const source = `<li v-if="n.n.n === true" :onClick="()=> { return  n.n.n === false ? 1 : undefined }" ></li><li v-else :onClick="()=>{ return n.n.n === true ? 1 : undefined}"/>`;
+            const parsed = doParseContent(source);
+            const { magicString } = process(parsed);
+
+            // NOTE the resulted snapshot should give an error with typescript in the correct environment
+            expect(magicString.toString()).toMatchInlineSnapshot(
+              `"<template>{(___VERTER__ctx.n.n.n === true)?<li  onClick={()=> { if(!((___VERTER__ctx.n.n.n === true))) { return; } return  ___VERTER__ctx.n.n.n === false ? 1 : undefined }} ></li>:<li  onClick={()=>{ if((___VERTER__ctx.n.n.n === true)) { return; } return ___VERTER__ctx.n.n.n === true ? 1 : undefined}}/>}</template>"`
+            );
+          });
+
+          it("function", () => {
+            const source = `<li v-if="n.n.n === true" :onClick="function() { return  n.n.n === false ? 1 : undefined } "></li><li v-else :onClick="function(){ return n.n.n === true ? 1 : undefined}"/>`;
+            const parsed = doParseContent(source);
+            const { magicString } = process(parsed);
+
+            // NOTE the resulted snapshot should give an error with typescript in the correct environment
+            expect(magicString.toString()).toMatchInlineSnapshot(
+              `"<template>{(___VERTER__ctx.n.n.n === true)?<li  onClick={function() { if(!((___VERTER__ctx.n.n.n === true))) { return; } return  ___VERTER__ctx.n.n.n === false ? 1 : undefined } }></li>:<li  onClick={function(){ if((___VERTER__ctx.n.n.n === true)) { return; } return ___VERTER__ctx.n.n.n === true ? 1 : undefined}}/>}</template>"`
+            );
+          });
+
+          it("narrow on conditional arrow function", () => {
+            const source = `<li v-if="n.n.n === true" :onClick="n.n.a === true ? (()=> n.n.n === false || n.n.a === false) : undefined "></li>`;
+
+            const parsed = doParseContent(source);
+            const { magicString } = process(parsed);
+
+            // NOTE the resulted snapshot should give an error with typescript in the correct environment
+            expect(magicString.toString()).toMatchInlineSnapshot(
+              `"<template>{(___VERTER__ctx.n.n.n === true)?<li  onClick={___VERTER__ctx.n.n.a === true ? (()=> !((___VERTER__ctx.n.n.n === true) && ___VERTER__ctx.n.n.a === true) ? undefined : ___VERTER__ctx.n.n.n === false || ___VERTER__ctx.n.n.a === false) : undefined }></li> : undefined}</template>"`
+            );
+          });
         });
 
         describe.skip("invalid conditions", () => {
@@ -1032,6 +1061,39 @@ describe("process", () => {
             `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,eAAgB,KAAK,gBAAC,IAAI,CAAC"}"`
           );
         });
+
+        it("bind arrow function", () => {
+          const source = `<div :name="()=>name" />`;
+
+          const parsed = doParseContent(source);
+          const { magicString } = process(parsed);
+
+          expect(magicString.toString()).toMatchInlineSnapshot(
+            `"<template><div name={()=>___VERTER__ctx.name} /></template>"`
+          );
+        });
+
+        it("bind arrow function with return ", () => {
+          const source = `<div :name="()=>{ return name }" />`;
+
+          const parsed = doParseContent(source);
+          const { magicString } = process(parsed);
+
+          expect(magicString.toString()).toMatchInlineSnapshot(
+            `"<template><div name={()=>{ return ___VERTER__ctx.name }} /></template>"`
+          );
+        });
+
+        // it.only("bind arrow function with returnX ", () => {
+        //   const source = `<div :onName="()=>{ return name }" />`;
+
+        //   const parsed = doParseContent(source);
+        //   const { magicString } = process(parsed);
+
+        //   expect(magicString.toString()).toMatchInlineSnapshot(
+        //     `"<template><div name={()=>{ return ___VERTER__ctx.name }} /></template>"`
+        //   );
+        // });
       });
 
       // NOTE waiting for https://github.com/vuejs/core/pull/3399
@@ -1355,6 +1417,21 @@ describe("process", () => {
       expect(magicString.toString()).toMatchInlineSnapshot(
         `"<template><div> <div </div></template>"`
       );
+    });
+
+    it("should not append ctx", () => {
+      const source = `<input v-model="msg" :onClick="function (){ 
+        console.log('hello there')
+      }" />`;
+
+      const parsed = doParseContent(source);
+      const { magicString } = process(parsed);
+
+      expect(magicString.toString()).toMatchInlineSnapshot(`
+        "<template><input v-model="msg" onClick={function (){ 
+                console.log('hello there')
+              }} /></template>"
+      `);
     });
 
     // TODO handle attribute on partial
