@@ -136,6 +136,19 @@ describe("process", () => {
         `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,2BAAW,WAAY,CAAE,KAAK,gBAAC,GAAG,CAAC"}"`
       );
     });
+    it("binding multi-line", () => {
+      const source = `<my-component :bind="
+      i == 1 ? false : true
+      "/>`;
+      const parsed = doParseContent(source);
+
+      const { magicString } = process(parsed);
+      expect(magicString.toString()).toMatchInlineSnapshot(`
+        "<template><___VERTER__comp.MyComponent bind={
+              ___VERTER__ctx.i == 1 ? false : true
+              }/></template>"
+      `);
+    });
 
     it("binding boolean", () => {
       const source = `<my-component :bind="false"/>`;

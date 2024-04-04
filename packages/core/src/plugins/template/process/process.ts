@@ -1821,11 +1821,16 @@ function appendCtx(
   if (s) {
     // node.loc.start.index is babel accessing, the first char pos is 1
     // instead of zero-based
-    const start =
+    const nodeStart =
       (node.loc ? node.loc.start.offset ?? node.loc.start.index - 1 : 0) +
       __offset;
-    const end =
+    const nodeEnd =
       (node.loc ? node.loc.end.offset ?? node.loc.end.index - 1 : 0) + __offset;
+
+    // empty string do not count for the start and end
+    const start = s.original.indexOf(content, nodeStart) - 1;
+    const end = nodeEnd;
+
     // there's a case where the offset is off
     if (s.original.slice(start, end) !== content) {
       s.prependRight(start + 1, `${accessor}.`);
