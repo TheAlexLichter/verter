@@ -47,9 +47,6 @@ importers:
       '@ampproject/remapping':
         specifier: ^2.3.0
         version: 2.3.0
-      '@babel/parser':
-        specifier: ^7.23.6
-        version: 7.23.6
       '@babel/types':
         specifier: ^7.23.6
         version: 7.23.6
@@ -65,6 +62,9 @@ importers:
       '@vue/shared':
         specifier: ^3.4.13
         version: 3.4.13(patch_hash=wximcujn62nz4pccw2imtws3gu)
+      acorn-loose:
+        specifier: ^8.4.0
+        version: 8.4.0
       glob:
         specifier: ^10.3.10
         version: 10.3.10
@@ -962,6 +962,13 @@ packages:
   /@vue/shared@3.4.21:
     resolution: {integrity: sha512-PuJe7vDIi6VYSinuEbUIQgMIRZGgM8e4R+G+/dQTk0X1NEdvgvvgv7m+rfmDH1gZzyA1OjjoWskvHlfRNfQf3g==}
     dev: true
+
+  /acorn-loose@8.4.0:
+    resolution: {integrity: sha512-M0EUka6rb+QC4l9Z3T0nJEzNOO7JcoJlYMrBlyBCiFSXRyxjLKayd4TbQs2FDRWQU1h9FR7QVNHt+PEaoNL5rQ==}
+    engines: {node: '>=0.4.0'}
+    dependencies:
+      acorn: 8.11.3
+    dev: false
 
   /acorn-walk@8.3.2:
     resolution: {integrity: sha512-cjkyv4OtNCIeqhHrfS81QWXoCBPExR/J62oyEqepVw8WaQeSqpW2uhuLPh1m9eWhDuOo/jUXVTlifvesOWp/4A==}

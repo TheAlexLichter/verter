@@ -22,12 +22,12 @@
   "license": "ISC",
   "dependencies": {
     "@ampproject/remapping": "^2.3.0",
-    "@babel/parser": "^7.23.6",
     "@babel/types": "^7.23.6",
     "@types/ts-expose-internals": "npm:ts-expose-internals@5.2.2",
     "@vue/compiler-core": "^3.4.13",
     "@vue/compiler-sfc": "^3.4.13",
     "@vue/shared": "^3.4.13",
+    "acorn-loose": "^8.4.0",
     "glob": "^10.3.10",
     "source-map-js": "^1.0.2",
     "typescript": "^5.3.3"

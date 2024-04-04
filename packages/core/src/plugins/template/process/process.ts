@@ -18,6 +18,7 @@ import {
 } from "@vue/compiler-core";
 import { camelize, capitalize, isGloballyAllowed, makeMap } from "@vue/shared";
 import type * as _babel_types from "@babel/types";
+import { parse as acornParse } from "acorn-loose";
 
 const isLiteralWhitelisted = /*#__PURE__*/ makeMap("true,false,null,this");
 
@@ -1515,6 +1516,8 @@ function resolveComponentTag(
   return { name: node.tag };
 }
 
+const NonWordRegex = /\W/;
+
 function retrieveStringExpressionNode(
   node: ExpressionNode | undefined,
   s: MagicString | undefined,
@@ -1530,17 +1533,49 @@ function retrieveStringExpressionNode(
 
       // Not very complex condition
       if (!node.ast) {
-        return prepend ? appendCtx(node, s, context) : node.content;
+        if (!node.isStatic) {
+          // this is probably partial element
+          // while the user is typing is useful to keep parsing
+          if (NonWordRegex.test(node.content)) {
+            // function preprocessCode(code: string) {
+            //   // Simple regex to remove a trailing dot that's not followed by an identifier
+            //   return code.replace(/\.(\W)/g, " $1");
+            // }
+
+            try {
+              // const p = preprocessCode(node.content);
+              const ast = acornParse(node.content, {
+                ecmaVersion: "latest",
+              });
+
+              node.ast = ast.body[0];
+            } catch (e) {
+              console.error(e);
+            }
+          }
+        }
+
+        if (!node.ast) {
+          return prepend ? appendCtx(node, s, context) : node.content;
+        }
       }
+
       const offset =
         overrideOffset >= 0
           ? overrideOffset
           : node.loc.start.offset - node.ast.start;
+
+      let trimmedOffset = 0;
+      const trimmedContent = node.loc.source.trimStart();
+      if (trimmedContent.length !== node.loc.source.length) {
+        trimmedOffset = node.loc.source.length - trimmedContent.length;
+      }
+
       return parseNodeText(
         node.ast,
         s,
         context,
-        offset,
+        offset + trimmedOffset,
         prepend,
         narrowConditions
       );
@@ -1805,7 +1840,8 @@ function appendCtx(
 ) {
   // babel parses `.` at the end as the name instead of member expression,
   // when typing we don't want to attach the ctx if end in a .
-  const content = (node.content ?? node.name ?? node).split(".")[0];
+  const originalContent = node.content ?? node.name ?? node;
+  const content = originalContent.split(".")[0];
   if (
     isGloballyAllowed(content) ||
     isLiteralWhitelisted(content) ||
@@ -1821,18 +1857,21 @@ function appendCtx(
   if (s) {
     // node.loc.start.index is babel accessing, the first char pos is 1
     // instead of zero-based
-    const nodeStart =
-      (node.loc ? node.loc.start.offset ?? node.loc.start.index - 1 : 0) +
+    const start =
+      (node.loc
+        ? node.loc.start.offset ?? node.loc.start.index
+        : node.start ?? 0) + __offset;
+    const end =
+      (node.loc ? node.loc.end.offset ?? node.loc.end.index : node.end ?? 0) +
       __offset;
-    const nodeEnd =
-      (node.loc ? node.loc.end.offset ?? node.loc.end.index - 1 : 0) + __offset;
 
-    // empty string do not count for the start and end
-    const start = s.original.indexOf(content, nodeStart) - 1;
-    const end = nodeEnd;
+    if (start === end) {
+      console.warn("VERTER same start/end", originalContent, start, end);
+      return;
+    }
 
     // there's a case where the offset is off
-    if (s.original.slice(start, end) !== content) {
+    if (s.original.slice(start, end) !== originalContent) {
       s.prependRight(start + 1, `${accessor}.`);
     } else {
       s.prependRight(start, `${accessor}.`);

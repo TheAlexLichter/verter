@@ -1,7 +1,10 @@
+import { baseCompile, baseParse } from "@vue/compiler-core";
 import { parse as sfcParse, MagicString } from "@vue/compiler-sfc";
 import { parse } from "../parse/parse";
 import { process as processFn } from "./process";
 import fs from "fs";
+
+import * as CompilerDOM from "@vue/compiler-dom";
 
 describe("process", () => {
   function testSourceMaps(
@@ -22,7 +25,35 @@ describe("process", () => {
 
   function doParseContent(content: string) {
     const source = `<template>${content}</template>`;
-    const ast = sfcParse(source, {});
+
+    const ast = sfcParse(source, {
+      // compiler: {
+      //   compile(source, options) {
+      //     const r = CompilerDOM.compile(source, options);
+      //     return r;
+      //   },
+      //   parse(template, options) {
+      //     const r = CompilerDOM.parse(template, {
+      //       ...options,
+      //       expressionPlugins: [
+      //         (...args) => {
+      //           console.log("ssadsa", ...args);
+      //           debugger;
+      //         },
+      //         ["importAttributes", () => {
+      //           debugger
+      //         }],
+      //       ],
+      //     });
+      //     return r;
+      //   },
+      // },
+      templateParseOptions: {
+        prefixIdentifiers: true,
+        expressionPlugins: ["typescript"],
+        // expressionPlugins: [""],
+      },
+    });
     const root = ast.descriptor.template!.ast!;
 
     return parse(root);
@@ -785,6 +816,20 @@ describe("process", () => {
                       </li>})}</template>"
           `);
         });
+
+        it("should append ctx to item", () => {
+          const source = `<li v-for="item in items">
+          {{ foo. }}            
+          </li>`;
+
+          const parsed = doParseContent(source);
+          const { magicString } = process(parsed);
+          expect(magicString.toString()).toMatchInlineSnapshot(`
+            "<template>{__VERTER__renderList(___VERTER__ctx.items,(item)=>{<li >
+                      { ___VERTER__ctx.foo. }            
+                      </li>})}</template>"
+          `);
+        });
       });
 
       describe("conditional v-if", () => {
@@ -964,6 +1009,138 @@ describe("process", () => {
             expect(magicString.toString()).toMatchInlineSnapshot(
               `"<template>{(___VERTER__ctx.r.n === false)?__VERTER__renderList(___VERTER__ctx.r.items,(item)=>{!((___VERTER__ctx.r.n === false)) ? undefined : <div   key={___VERTER__ctx.r.n === true ? 1 : false}></div>}) : undefined}</template>"`
             );
+          });
+
+          it("complex ", () => {
+            const source = `<div v-if="isSingle" class="h-full w-full">
+            <MediaPreview
+              ref="currentPreviewEl"
+              :message="mediaMessages[currentIndex]"
+              :src="src"
+              :type="type"
+              :preview="preview"
+            />
+          </div>
+      
+          <div v-else ref="swiperContainerEl" class="swiper flex h-full w-full">
+            <div v-show="!isPinched" class="absolute flex h-full w-full items-center">
+              <div ref="prevEl" class="button-prev absolute z-10">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 20 20"
+                  fill="white"
+                >
+                  <path
+                    d="M10.4772727,0.477272727 C10.7408632,0.740863176 10.7408632,1.16822773 10.4772727,1.43181818 L1.90909091,10 L10.4772727,18.5681818 C10.7408632,18.8317723 10.7408632,19.2591368 10.4772727,19.5227273 C10.2136823,19.7863177 9.78631772,19.7863177 9.52272727,19.5227273 L0.707106781,10.7071068 C0.316582489,10.3165825 0.316582489,9.68341751 0.707106781,9.29289322 L9.52272727,0.477272727 C9.78631772,0.213682278 10.2136823,0.213682278 10.4772727,0.477272727 Z"
+                    transform="translate(4)"
+                  ></path>
+                </svg>
+              </div>
+              <div :class="nextEl" class="button-next absolute right-0 z-10">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 20 20"
+                  fill="white"
+                >
+                  <path
+                    d="M1.37727273,19.5227273 C1.11368228,19.2591368 1.11368228,18.8317723 1.37727273,18.5681818 L9.94545455,10 L1.37727273,1.43181818 C1.11368228,1.16822773 1.11368228,0.740863176 1.37727273,0.477272727 C1.64086318,0.213682278 2.06822773,0.213682278 2.33181818,0.477272727 L11.1474387,9.29289322 C11.537963,9.68341751 11.537963,10.3165825 11.1474387,10.7071068 L2.33181818,19.5227273 C2.06822773,19.7863177 1.64086318,19.7863177 1.37727273,19.5227273 Z"
+                    transform="translate(4)"
+                  ></path>
+                </svg>
+              </div>
+            </div>
+            <div class="swiper-wrapper">
+              <div
+                v-for="(item, i) in mediaMessages"
+                :key="\`preview-\${item.id}\`"
+                class="swiper-slide items-center justify-center"
+                style="display: flex"
+              >
+                <div class="swiper-zoom-container mx-6 flex h-full w-full">
+                  <MediaPreview
+                    :ref="
+                      i === currentIndex ? (e) => (currentPreviewEl = e) : undefined
+                    "
+                    class="swiper-zoom-target"
+                    :message="item"
+                    :selected="i === currentIndex"
+                    :noRender="shouldNotPreload(i)"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>`;
+            const parsed = doParseContent(source);
+            const { magicString } = process(parsed);
+
+            expect(magicString.toString()).toMatchInlineSnapshot(`
+              "<template>{(___VERTER__ctx.isSingle)?<div  class="h-full w-full">
+                          <___VERTER__comp.MediaPreview
+                            ref="currentPreviewEl"
+                            message={___VERTER__ctx.mediaMessages[___VERTER__ctx.currentIndex]}
+                            src={___VERTER__ctx.src}
+                            type={___VERTER__ctx.type}
+                            preview={___VERTER__ctx.preview}
+                          />
+                        </div>
+                    
+                        :<div  ref="swiperContainerEl" class="swiper flex h-full w-full">
+                          <div v-show="!isPinched" class="absolute flex h-full w-full items-center">
+                            <div ref="prevEl" class="button-prev absolute z-10">
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="20"
+                                height="20"
+                                viewBox="0 0 20 20"
+                                fill="white"
+                              >
+                                <path
+                                  d="M10.4772727,0.477272727 C10.7408632,0.740863176 10.7408632,1.16822773 10.4772727,1.43181818 L1.90909091,10 L10.4772727,18.5681818 C10.7408632,18.8317723 10.7408632,19.2591368 10.4772727,19.5227273 C10.2136823,19.7863177 9.78631772,19.7863177 9.52272727,19.5227273 L0.707106781,10.7071068 C0.316582489,10.3165825 0.316582489,9.68341751 0.707106781,9.29289322 L9.52272727,0.477272727 C9.78631772,0.213682278 10.2136823,0.213682278 10.4772727,0.477272727 Z"
+                                  transform="translate(4)"
+                                ></path>
+                              </svg>
+                            </div>
+                            <div class={__VERTER__normalizeClass([___VERTER__ctx.nextEl,"button-next absolute right-0 z-10"])} >
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="20"
+                                height="20"
+                                viewBox="0 0 20 20"
+                                fill="white"
+                              >
+                                <path
+                                  d="M1.37727273,19.5227273 C1.11368228,19.2591368 1.11368228,18.8317723 1.37727273,18.5681818 L9.94545455,10 L1.37727273,1.43181818 C1.11368228,1.16822773 1.11368228,0.740863176 1.37727273,0.477272727 C1.64086318,0.213682278 2.06822773,0.213682278 2.33181818,0.477272727 L11.1474387,9.29289322 C11.537963,9.68341751 11.537963,10.3165825 11.1474387,10.7071068 L2.33181818,19.5227273 C2.06822773,19.7863177 1.64086318,19.7863177 1.37727273,19.5227273 Z"
+                                  transform="translate(4)"
+                                ></path>
+                              </svg>
+                            </div>
+                          </div>
+                          <div class="swiper-wrapper">
+                            {__VERTER__renderList(___VERTER__ctx.mediaMessages,(item, i)=>{if((___VERTER__ctx.isSingle)) { return; } <div
+                              
+                              key={\`preview-\${item.id}\`}
+                              class="swiper-slide items-center justify-center"
+                              style="display: flex"
+                            >
+                              <div class="swiper-zoom-container mx-6 flex h-full w-full">
+                                <___VERTER__comp.MediaPreview
+                                  ref={
+                                    i === ___VERTER__ctx.currentIndex ? (e) => (!(i === ___VERTER__ctx.currentIndex) || (___VERTER__ctx.isSingle) ? undefined : ___VERTER__ctx.currentPreviewEl = e) : undefined
+                                  }
+                                  class="swiper-zoom-target"
+                                  message={item}
+                                  selected={i === ___VERTER__ctx.currentIndex}
+                                  noRender={___VERTER__ctx.shouldNotPreload(i)}
+                                />
+                              </div>
+                            </div>})}
+                          </div>
+                        </div>}</template>"
+            `);
           });
         });
 
@@ -1420,7 +1597,35 @@ describe("process", () => {
       );
     });
 
-    it.todo("more complex", () => {
+    it("should apply ctx even with .", () => {
+      const source = `<div> 
+  {{ format(item.timestamp.) }}
+</div>`;
+
+      const parsed = doParseContent(source);
+      const { magicString } = process(parsed);
+      expect(magicString.toString()).toMatchInlineSnapshot(`
+        "<template><div> 
+          { ___VERTER__ctx.format(___VERTER__ctx.item.timestamp.) }
+        </div></template>"
+      `);
+    });
+
+    it("should apply ctx even with ?", () => {
+      const source = `<div> 
+  {{ format(item.timestamp ? ) }}
+</div>`;
+
+      const parsed = doParseContent(source);
+      const { magicString } = process(parsed);
+      expect(magicString.toString()).toMatchInlineSnapshot(`
+        "<template><div> 
+          { ___VERTER__ctx.format(___VERTER__ctx.item.timestamp ? ) }
+        </div></template>"
+      `);
+    });
+
+    it.skip("more complex", () => {
       const source = `<div v-if="!!floor || !!door" class="c3-address-floor">
       (<span v-if="!!floor">{{ $t('user.floor') }}: {{ floor }}{{ !!door ? ', ' : '' }}</span><span v-if="!!door">{{ $t('user.door') }}: {{ door }}</span>)
   </div>`;
