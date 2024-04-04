@@ -132,7 +132,7 @@ export function mergeFull(
         declaration: {
           content: `// Helper to retrieve slots definitions
 declare function ___VERTER_extract_Slots<CompSlots>(comp: { new(): { $slots: CompSlots } }, slots?: undefined): CompSlots
-declare function ___VERTER_extract_Slots<CompSlots, Slots extends Record<string, any> = {}>(comp: { new(): { $slots: CompSlots } }, slots?: Slots): Slots extends undefined ? CompSlots : Slots`,
+declare function ___VERTER_extract_Slots<CompSlots, Slots extends Record<string, any> = {}>(comp: { new(): { $slots: CompSlots } }, slots: Slots): Slots`,
         },
       },
       // TODO add defineSlots definition here as ___VERTER_DEFINE_SLOTS___

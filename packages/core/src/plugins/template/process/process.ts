@@ -176,13 +176,19 @@ function renderSlot(
   const endIndex = node.node.loc.end.offset;
 
   const tagNameEndIndex = startIndex + 1 + node.tag.length;
+  const firstAttributeIndex = node.props.length
+    ? Math.min(...node.props.map((x) => x.node.loc.start.offset - 1))
+    : tagNameEndIndex;
 
   // replace < with {()=>{\n
-  s.overwrite(startIndex, startIndex + 1, "{()=>{\n");
+  s.overwrite(startIndex, startIndex + 1, `${node.NO_WRAP ? "" : "{"}()=>{\n`, {
+    contentOnly: true,
+  });
 
   if ("isSelfClosing" in node.node && node.node.isSelfClosing) {
     // replace last `/>` with \n}}
-    s.prependRight(endIndex, "\n}}");
+    // s.prependLeft(endIndex, "\n}}");
+    s.prependLeft(endIndex, `\n${node.NO_WRAP ? "" : "}"}}`);
   } else {
     const lastKnownStartIndex = Math.max(
       ...(node.children.length > 0
@@ -194,7 +200,8 @@ function renderSlot(
     const slotNameIndex = s.original.indexOf("slot", lastKnownStartIndex);
 
     s.overwrite(slotNameIndex, slotNameIndex + "slot".length, "Comp");
-    s.prependRight(endIndex, "\n}}");
+    // s.prependLeft(endIndex, "\n}}");
+    s.prependLeft(endIndex, `\n${node.NO_WRAP ? "" : "}"}}`);
   }
 
   const nameAttribute = node.props.find(
@@ -204,12 +211,15 @@ function renderSlot(
   );
   // move name attribute to the beginning
   if (nameAttribute) {
-    if (nameAttribute.node.loc.start.offset > tagNameEndIndex + 1) {
+    // only move to the first attribute, because if there's an v-if we need to be first
+    // attribute
+
+    if (nameAttribute.node.loc.start.offset > firstAttributeIndex + 1) {
       // don't append really at the end because it might cause issues when overriding it
       s.move(
         nameAttribute.node.loc.start.offset,
         nameAttribute.node.loc.end.offset,
-        tagNameEndIndex + 1
+        firstAttributeIndex + 1
       );
     }
   }
@@ -218,18 +228,28 @@ function renderSlot(
   s.overwrite(
     startIndex + 1,
     tagNameEndIndex,
-    context.slotAccessor + `${nameAttribute ? "" : ".default"}`
+    context.slotAccessor + `${nameAttribute ? "" : ".default"}`,
+    {
+      contentOnly: true,
+    }
   );
 
   // prepending variable `declaration const Comp = `
-  s.prependLeft(startIndex + 1, "const Comp = ");
+  s.prependRight(startIndex + 1, "const Comp = ");
 
   // check if the nameAttribute was moved, if it was we prependRight
   if (
     !nameAttribute ||
-    nameAttribute.node.loc.start.offset > tagNameEndIndex + 1
+    nameAttribute.node.loc.start.offset > firstAttributeIndex + 1
   ) {
-    s.prependRight(tagNameEndIndex + 1, "\nreturn <Comp ");
+    s.prependRight(
+      firstAttributeIndex +
+        (nameAttribute?.node.type === NodeTypes.DIRECTIVE ||
+        !node.node.isSelfClosing
+          ? 1
+          : 0),
+      "\nreturn <Comp "
+    );
   } else {
     s.prependRight(nameAttribute.node.loc.end.offset, "\nreturn <Comp ");
   }
@@ -286,6 +306,8 @@ function renderSlot(
       }
     }
   }
+
+  renderChildren(node.children, s, context);
 }
 
 function renderElement(
@@ -1032,7 +1054,7 @@ function renderConditionNarrowed(
 
     renderChildren(
       condition.children.map((x) => {
-        if (x.type === "for") {
+        if (x.type === "for" || x.type === "slot") {
           // prevent wrapping of the for loop
           x.NO_WRAP = true;
         }
@@ -1188,7 +1210,7 @@ function renderConditionBetter(
 
     renderChildren(
       condition.children.map((x) => {
-        if (x.type === "for") {
+        if (x.type === "for" || x.type === "slot") {
           // prevent wrapping of the for loop
           x.NO_WRAP = true;
         }

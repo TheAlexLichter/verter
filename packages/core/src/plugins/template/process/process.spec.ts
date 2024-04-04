@@ -1403,15 +1403,15 @@ describe("process", () => {
     });
   });
 
-  describe("slots", () => {
+  describe.only("slots", () => {
     it("declaring slots", () => {
       const source = `<div><slot /><div>`;
       const parsed = doParseContent(source);
       const { magicString } = process(parsed);
       expect(magicString.toString()).toMatchInlineSnapshot(`
         "<template><div>{()=>{
-        const Comp = ___VERTER_SLOT_COMP.default 
-        return <Comp />
+        const Comp = ___VERTER_SLOT_COMP.default
+        return <Comp  />
         }}<div></template>"
       `);
     });
@@ -1457,8 +1457,8 @@ describe("process", () => {
       const { magicString } = process(parsed);
       expect(magicString.toString()).toMatchInlineSnapshot(`
         "<template><div>{()=>{
-        const Comp = ___VERTER_SLOT_COMP.default 
-        return <Comp foo="foo"/>
+        const Comp = ___VERTER_SLOT_COMP.default
+        return <Comp  foo="foo"/>
         }}<div></template>"
       `);
     });
@@ -1482,7 +1482,7 @@ describe("process", () => {
         `
         "<template><div>{()=>{
         const Comp = ___VERTER_SLOT_COMP .foo
-        return <Comp foo="foo" > <span> default </span></Comp>
+        return <Comp foo="foo" > <span>{ " default " }</span></Comp>
         }}<div></template>"
       `
       );
@@ -1497,6 +1497,37 @@ describe("process", () => {
         const Comp = ___VERTER_SLOT_COMP .foo
         return <Comp foo="foo" > </Comp>
         }}<div></template>"
+      `);
+    });
+
+    it("v-if slot", () => {
+      const source = `<div><slot v-if="foo === 'name'" name="bar"> </slot><div>`;
+      const parsed = doParseContent(source);
+      const { magicString } = process(parsed);
+      expect(magicString.toString()).toMatchInlineSnapshot(`
+        "<template><div>{(___VERTER__ctx.foo === 'name')?()=>{
+        const Comp = ___VERTER_SLOT_COMP  .bar
+        return <Comp > </Comp>
+        } : undefined}<div></template>"
+      `);
+    });
+
+    it("nested", () => {
+      const source = `<slot v-if="disableDrag" :name="selected as T">
+      <slot :disableDrag />
+    </slot>`;
+      const parsed = doParseContent(source);
+      const { magicString } = process(parsed);
+      expect(magicString.toString()).toMatchInlineSnapshot(`
+        "<template>{(___VERTER__ctx.disableDrag)?()=>{
+        const Comp = ___VERTER_SLOT_COMP  [___VERTER__ctx.selected as T]
+        return <Comp >
+              {()=>{
+        const Comp = ___VERTER_SLOT_COMP.default
+        return <Comp  disableDrag={___VERTER__ctx.disableDrag} />
+        }}
+            </Comp>
+        } : undefined}</template>"
       `);
     });
   });
