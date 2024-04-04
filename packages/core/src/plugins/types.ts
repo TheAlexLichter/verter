@@ -164,6 +164,9 @@ export interface TypeLocationProps {
   // always the `defineProps` expression
   expression: _babel_types.Expression;
 
+  // parent of the expression, can be
+  varName?: string;
+
   content?: string;
   properties?: {
     name: string;

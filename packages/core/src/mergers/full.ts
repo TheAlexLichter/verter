@@ -193,11 +193,13 @@ export function mergeFull(
             name: "___VERTER_PROPS___",
             content: `{
               ${locations.props
-                .map((x) =>
-                  s.original.slice(
-                    x.expression.start + context.script.loc.start.offset,
-                    x.expression.end + context.script.loc.start.offset
-                  )
+                .map(
+                  (x) =>
+                    x.varName ||
+                    s.original.slice(
+                      x.expression.start + context.script.loc.start.offset,
+                      x.expression.end + context.script.loc.start.offset
+                    )
                 )
                 .map((x) => `...(${x})`)
                 .join(",\n")}
@@ -209,13 +211,14 @@ export function mergeFull(
         // to prevent typescript from merging types, we need to omit
         // the exposed values, props have a lower priority in the context
         exposedCtx.push(
-          `...({} as ${
-            rawToExposeCtx.length
-              ? `Omit<${propsType}, ${rawToExposeCtx
-                  .map((x) => JSON.stringify(x))
-                  .join("|")}>`
-              : propsType
-          })`
+          // `...({} as ${
+          //   rawToExposeCtx.length
+          //     ? `Omit<${propsType}, ${rawToExposeCtx
+          //         .map((x) => JSON.stringify(x))
+          //         .join("|")}>`
+          //     : propsType
+          // })`
+          `...___VERTER_PROPS___`
         );
       }
       exposedCtx.push(
@@ -227,9 +230,14 @@ export function mergeFull(
 
     exposedCtx.unshift(
       `...({} as ${
-        rawToExposeCtx.length
+        rawToExposeCtx.length || locations.props.length
           ? `Omit<${instanceType}, ${rawToExposeCtx
               .map((x) => JSON.stringify(x))
+              .concat(
+                locations.props.length
+                  ? ["keyof typeof ___VERTER_PROPS___"]
+                  : []
+              )
               .join("|")}>`
           : instanceType
       })`
@@ -480,7 +488,8 @@ export function mergeFull(
 declare global {
   namespace JSX {
     export interface IntrinsicClassAttributes<T> {
-      $children: T extends { $slots: infer S } ? { default?: never } & { [K in keyof S]: S[K] extends (...args: infer Args) => any ? (...args: Args) => JSX.Element : () => JSX.Element } : { default?: never }
+      // $children: T extends { $slots: infer S } ? { default?: never } & { [K in keyof S]: S[K] extends (...args: infer Args) => any ? (...args: Args) => JSX.Element : () => JSX.Element } : { default?: never }
+      $children?: T extends { $slots: infer S } ? S : undefined
     }
   }
 }

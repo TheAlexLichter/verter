@@ -12,6 +12,11 @@ export default {
     if (!expression) return;
     const source = context.script!.loc.source;
 
+    const varName =
+      node.type === "VariableDeclaration" && node.declarations.length === 1
+        ? node.declarations[0].id.name
+        : undefined;
+
     if (
       context.generic &&
       (expression.typeParameters?.params.length ?? 0) > 0
@@ -39,6 +44,7 @@ export default {
             source
           ),
           expression,
+          varName,
         },
       ];
     }
@@ -49,6 +55,7 @@ export default {
         generated: false,
         content: retrieveNodeString(expression, source),
         expression,
+        varName,
       },
 
       // {
