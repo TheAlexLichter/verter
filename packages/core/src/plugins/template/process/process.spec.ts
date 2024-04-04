@@ -745,13 +745,9 @@ describe("process", () => {
 
           const parsed = doParseContent(source);
           const { magicString } = process(parsed);
-          expect(magicString.toString()).toMatchInlineSnapshot(
-            `"<template>{(___VERTER__ctx.items > 5)?__VERTER__renderList(___VERTER__ctx.items,(i)=>{<li  ></li>}) : undefined}</template>"`
-          );
+          expect(magicString.toString()).toMatchInlineSnapshot(`"<template>{(___VERTER__ctx.items > 5)?__VERTER__renderList(___VERTER__ctx.items,(i)=>{!((___VERTER__ctx.items > 5)) ? undefined : <li  ></li>}) : undefined}</template>"`);
 
-          expect(magicString.generateMap().toString()).toMatchInlineSnapshot(
-            `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,WAAsC,gBAAC,SAAS,CAAf,CAAnB,oBAAM,gBAAM,KAAJ,EAAD,CAAU,IAArB,IAAsB,CAAiB,GAAG,EAAE,gBAAC"}"`
-          );
+          expect(magicString.generateMap().toString()).toMatchInlineSnapshot(`"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,WAAsC,gBAAC,SAAS,CAAf,CAAnB,oBAAM,gBAAM,KAAJ,EAAD,CAAU,gDAArB,IAAsB,CAAiB,GAAG,EAAE,gBAAC"}"`);
 
           testSourceMaps(
             magicString.toString(),
@@ -918,6 +914,24 @@ describe("process", () => {
             // NOTE the resulted snapshot should give an error with typescript in the correct environment
             expect(magicString.toString()).toMatchInlineSnapshot(
               `"<template>{(___VERTER__ctx.n.n.n === true)?<li  onClick={___VERTER__ctx.n.n.a === true ? (()=> !((___VERTER__ctx.n.n.n === true) && ___VERTER__ctx.n.n.a === true) ? undefined : ___VERTER__ctx.n.n.n === false || ___VERTER__ctx.n.n.a === false) : undefined }></li> : undefined}</template>"`
+            );
+          });
+
+          it("narrow with v-for", () => {
+            /**
+             * To test, check with
+             * ```ts
+             * declare const r: { n: true, items: string[] } | { n: false, items: number[] };
+             * ```
+             */
+            const source = `<div v-for="item in r.items" v-if="r.n === false" :key="r.n === true ? 1 : false"></div>`;
+
+            const parsed = doParseContent(source);
+            const { magicString } = process(parsed);
+
+            // NOTE the resulted snapshot should give an error with typescript in the correct environment
+            expect(magicString.toString()).toMatchInlineSnapshot(
+              `"<template>{(___VERTER__ctx.r.n === false)?__VERTER__renderList(___VERTER__ctx.r.items,(item)=>{!((___VERTER__ctx.r.n === false)) ? undefined : <div   key={___VERTER__ctx.r.n === true ? 1 : false}></div>}) : undefined}</template>"`
             );
           });
         });

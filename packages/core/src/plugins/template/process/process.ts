@@ -729,6 +729,12 @@ function renderFor(
   // close v-for
   s.appendLeft(childEnd, "})");
 
+  // append conditions
+  const narrowConditions = generateNarrowCondition(context, !node.NO_WRAP);
+  if (narrowConditions) {
+    s.prependRight(childStart, narrowConditions);
+  }
+
   const childrenContext = {
     ...context,
     ignoredIdentifiers,
