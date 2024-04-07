@@ -142,7 +142,7 @@ function parseNode(
       return {
         type: ParsedType.Text,
         node,
-        content: node.content,
+        content: node.content,  
       };
     }
     case NodeTypes.COMMENT: {
@@ -294,9 +294,8 @@ function groupConditions(elements: ParsedNodeBase[]) {
 
         if (lastIfIndex !== -1) {
           addCondition();
-        } else {
-          children.push(it);
         }
+        children.push(it);
         break;
       }
     }
