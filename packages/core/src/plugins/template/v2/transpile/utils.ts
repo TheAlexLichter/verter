@@ -80,7 +80,9 @@ export function appendCtx(
   /**
    * only used for the offset when using babel
    */
-  __offset: number = 0
+  __offset: number = 0,
+
+  __extraPrepend: string = ""
 ) {
   let content = "";
 
@@ -95,7 +97,25 @@ export function appendCtx(
       console.warn("no offset has been passed");
     }
     if (isExpressionBabel(node)) {
-      debugger;
+      switch (node.type) {
+        case "Identifier": {
+          content = node.name;
+
+          // fix the offset, because whitespaces are not counted
+          start = context.s.original.indexOf(
+            content,
+            __offset + node.loc.start.index
+          );
+          end = start + content.length;
+
+          break;
+        }
+        default: {
+          console.error("VERTER unknonw node type ", node.type);
+          debugger;
+          break;
+        }
+      }
     }
   } else {
     content =
@@ -126,13 +146,14 @@ export function appendCtx(
     }
     // there's a case where the offset is off
     if (context.s.original.slice(start, end) !== content) {
-      context.s.appendRight(start + 1, `${accessor}.`);
+      context.s.appendRight(start + 1, `${__extraPrepend}${accessor}.`);
     } else {
-      if (context.s.original[start - 1] === "[") {
-        context.s.appendRight(start, `${accessor}`);
-      } else {
-        context.s.appendRight(start, `${accessor}.`);
-      }
+      // if (context.s.original[start - 1] === "[") {
+      //   context.s.prependLeft(start, `${accessor}.`);
+      // } else {
+      context.s.appendRight(start, `${__extraPrepend}${accessor}.`);
+      // }
     }
   }
+  return `${__extraPrepend}${accessor}.${content}`;
 }

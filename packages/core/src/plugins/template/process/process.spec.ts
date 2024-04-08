@@ -339,41 +339,6 @@ describe("process", () => {
       );
     });
 
-    describe("events", () => {
-      it('should camelCase "on" event listeners', () => {
-        const source = `<span @check-for-something="test"></span>`;
-
-        const parsed = doParseContent(source);
-        const { magicString } = process(parsed);
-        expect(magicString.toString()).toMatchInlineSnapshot(
-          `"<template><span onCheckForSomething={___VERTER__ctx.test}></span></template>"`
-        );
-
-        expect(magicString.generateMap().toString()).toMatchInlineSnapshot(
-          `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,gBAAgB,EAAC,iBAAmB,CAAC,gBAAC,IAAI,CAAC,GAAG,IAAI"}"`
-        );
-      });
-
-      it("should append ctx inside of functions", () => {
-        const source = `<span @check-for-something="e=> { foo = e }"></span>`;
-
-        const parsed = doParseContent(source);
-        const { magicString } = process(parsed);
-        expect(magicString.toString()).toMatchInlineSnapshot(
-          `"<template><span onCheckForSomething={e=> { ___VERTER__ctx.foo = e }}></span></template>"`
-        );
-      });
-
-      it("should add event correctly", () => {
-        const source = `<span @back="navigateToSession(null)"/>`;
-
-        const parsed = doParseContent(source);
-        const { magicString } = process(parsed);
-        expect(magicString.toString()).toMatchInlineSnapshot(
-          `"<template><span onBack={___VERTER__ctx.navigateToSession(null)}/></template>"`
-        );
-      });
-    });
     it("should camelCase bind", () => {
       const source = `<span :model-value="test"></span>`;
 
@@ -584,6 +549,42 @@ describe("process", () => {
         const { magicString } = process(parsed);
         expect(magicString.toString()).toMatchInlineSnapshot(
           `"<template><span style={{[colour]: ___VERTER__ctx.myColour}}></span></template>"`
+        );
+      });
+    });
+
+    describe("events", () => {
+      it('should camelCase "on" event listeners', () => {
+        const source = `<span @check-for-something="test"></span>`;
+
+        const parsed = doParseContent(source);
+        const { magicString } = process(parsed);
+        expect(magicString.toString()).toMatchInlineSnapshot(
+          `"<template><span onCheckForSomething={___VERTER__ctx.test}></span></template>"`
+        );
+
+        expect(magicString.generateMap().toString()).toMatchInlineSnapshot(
+          `"{"version":3,"sources":[""],"names":[],"mappings":"AAAA,gBAAgB,EAAC,iBAAmB,CAAC,gBAAC,IAAI,CAAC,GAAG,IAAI"}"`
+        );
+      });
+
+      it("should append ctx inside of functions", () => {
+        const source = `<span @check-for-something="e=> { foo = e }"></span>`;
+
+        const parsed = doParseContent(source);
+        const { magicString } = process(parsed);
+        expect(magicString.toString()).toMatchInlineSnapshot(
+          `"<template><span onCheckForSomething={e=> { ___VERTER__ctx.foo = e }}></span></template>"`
+        );
+      });
+
+      it("should add event correctly", () => {
+        const source = `<span @back="navigateToSession(null)"/>`;
+
+        const parsed = doParseContent(source);
+        const { magicString } = process(parsed);
+        expect(magicString.toString()).toMatchInlineSnapshot(
+          `"<template><span onBack={___VERTER__ctx.navigateToSession(null)}/></template>"`
         );
       });
     });

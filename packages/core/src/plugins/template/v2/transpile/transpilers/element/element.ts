@@ -11,6 +11,8 @@ import {
   TemplateChildNode,
   TemplateNode,
   extractIdentifiers,
+  AttributeNode,
+  walkIdentifiers,
 } from "@vue/compiler-core";
 import {
   appendCtx,
@@ -26,6 +28,7 @@ import {
 } from "@babel/types";
 import { VerterNode } from "../../../walk";
 import { camelize, capitalize, isString } from "@vue/shared";
+import { LocationType } from "../../../../../types";
 
 export default createTranspiler(NodeTypes.ELEMENT, {
   enter(node, parent, context) {
@@ -40,6 +43,8 @@ export default createTranspiler(NodeTypes.ELEMENT, {
     if (!isWebComponent && tag !== node.tag) {
       context.s.overwrite(tagIndex, tagIndex + node.tag.length, tag);
     }
+
+    processProps(node, context);
 
     switch (node.tagType) {
       case ElementTypes.COMPONENT: {
@@ -241,19 +246,38 @@ function retrieveSlotNamed(node: ComponentNode) {
   return map;
 }
 
-function processExpression(exp: ExpressionNode, context: TranspileContext) {
+function processExpression(
+  exp: ExpressionNode,
+  context: TranspileContext,
+  dry = false
+) {
   switch (exp.type) {
     case NodeTypes.SIMPLE_EXPRESSION: {
       if (exp.ast) {
-        debugger;
+        const ast = exp.ast;
+        walkIdentifiers(ast, (id, parent) => {
+          const extraPrepend =
+            parent.type === "ObjectProperty" && parent.shorthand
+              ? `${id.name}:`
+              : "";
+
+          appendCtx(
+            id,
+            context,
+            false,
+            exp.loc.start.offset - ast.start,
+            extraPrepend
+          );
+        });
         // todo retrieve ast
+
         return;
       }
       if (exp.isStatic) {
         return exp.content;
       }
 
-      return appendCtx(exp, context);
+      return appendCtx(exp, context, dry);
     }
     case NodeTypes.COMPOUND_EXPRESSION: {
       if (exp.ast) {
@@ -287,17 +311,7 @@ function renderSlot(
       return;
     }
 
-    // context.s.appendLeft(
-    //   insertAt,
-    //   ["", `{${context.accessors.slotCallback}(`].join("\n")
-    // );
-
     const prepend = ["", `{${context.accessors.slotCallback}(`].join("\n");
-
-    // s.prependLeft(
-    //   slotProp.loc.start.offset,
-    //   ["", `{${context.accessors.slotCallback}(`].join("\n")
-    // );
 
     if (slotProp.arg) {
       processExpression(slotProp.arg, context);
@@ -390,8 +404,250 @@ function renderSlot(
 
   s.move(start, end, insertAt);
 
-  // context.s.appendRight(insertAt, `\n})}\n`);
   context.s.prependLeft(end, `\n})}\n`);
+}
+
+function sanitiseAttributeName(name: string, context: TranspileContext) {
+  if (context.attributes.camelWhitelist.some((x) => name.startsWith(x))) {
+    return name;
+  }
+  return camelize(name);
+}
+
+function processProps(
+  node: VerterNode & { type: NodeTypes.ELEMENT },
+  context: TranspileContext
+) {
+  const shouldCamel = node.tagType !== ElementTypes.ELEMENT;
+
+  const toNormalise = {
+    styles: [] as Array<DirectiveNode | AttributeNode>,
+    classes: [] as Array<DirectiveNode | AttributeNode>,
+  };
+
+  for (let i = 0; i < node.props.length; i++) {
+    const prop = node.props[i];
+    const name =
+      "arg" in prop && prop.arg
+        ? processExpression(prop.arg, context, true)
+        : prop.name;
+
+    switch (name) {
+      default: {
+        processProp(prop, context, shouldCamel);
+        break;
+      }
+      case "class": {
+        toNormalise.classes.push(prop);
+        break;
+      }
+      case "style": {
+        toNormalise.styles.push(prop);
+      }
+    }
+  }
+
+  normaliseProps("class", toNormalise.classes, context);
+  normaliseProps("style", toNormalise.styles, context);
+}
+
+function processProp(
+  prop: AttributeNode | DirectiveNode,
+  context: TranspileContext,
+  camelise = false
+) {
+  const { s } = context;
+  if (prop.type === NodeTypes.ATTRIBUTE) {
+    if (camelise) {
+      const cameled = sanitiseAttributeName(prop.name, context);
+      if (cameled !== prop.name) {
+        s.overwrite(
+          prop.nameLoc.start.offset,
+          prop.nameLoc.end.offset,
+          cameled
+        );
+      }
+    }
+    return;
+  }
+
+  switch (prop.name) {
+    case "bind": {
+      const name = prop.arg ? processExpression(prop.arg, context) : undefined;
+      const sanitisedName = name ? sanitiseAttributeName(name, context) : name;
+
+      if (sanitisedName !== name) {
+        s.overwrite(
+          prop.arg.loc.start.offset,
+          prop.arg.loc.end.offset,
+          sanitisedName
+        );
+      }
+
+      if (prop.exp) {
+        processExpression(prop.exp, context);
+
+        // update delimeters
+        s.overwrite(
+          prop.exp.loc.start.offset - 1,
+          prop.exp.loc.start.offset,
+          "{"
+        );
+        s.overwrite(prop.exp.loc.end.offset, prop.exp.loc.end.offset + 1, "}");
+      } else if (prop.rawName.startsWith(":")) {
+        s.remove(prop.loc.start.offset, prop.loc.start.offset + 1);
+        // short sugar syntax
+        s.prependLeft(prop.loc.start.offset + 1, `${sanitisedName}={`);
+        s.prependLeft(prop.loc.end.offset, "}");
+
+        // append ctx to name
+        appendCtx(prop.arg, context);
+      }
+
+      if (prop.rawName.startsWith(":") && prop.exp) {
+        s.remove(prop.loc.start.offset, prop.loc.start.offset + 1);
+      } else if (prop.loc.source.startsWith("v-bind:")) {
+        s.remove(
+          prop.loc.start.offset,
+          prop.loc.start.offset + "v-bind:".length
+        );
+      } else if (prop.loc.source.startsWith("v-bind=")) {
+        s.overwrite(
+          prop.loc.start.offset,
+          prop.loc.start.offset + "v-bind='".length,
+          "{..."
+        );
+      }
+
+      break;
+    }
+    case "on": {
+      const name = prop.arg ? processExpression(prop.arg, context) : undefined;
+      const sanitisedName = capitalize(
+        name ? sanitiseAttributeName(name, context) : name
+      );
+
+      if (sanitisedName !== name) {
+        s.overwrite(
+          prop.arg.loc.start.offset,
+          prop.arg.loc.end.offset,
+          sanitisedName
+        );
+      }
+
+      s.overwrite(prop.loc.start.offset, prop.loc.start.offset + 1, "on");
+
+      // update delimeters
+      s.overwrite(
+        prop.exp.loc.start.offset - 1,
+        prop.exp.loc.start.offset,
+        "{"
+      );
+      s.overwrite(prop.exp.loc.end.offset, prop.exp.loc.end.offset + 1, "}");
+
+      processExpression(prop.exp, context);
+
+      break;
+    }
+    case "slot": {
+      // Handled by the parent
+      break;
+    }
+
+    default: {
+      // unknown
+      debugger;
+      break;
+    }
+  }
+}
+
+function normaliseProps(
+  type: "style" | "class",
+  props: Array<DirectiveNode | AttributeNode>,
+  context: TranspileContext
+) {
+  if (props.length === 0) {
+    return;
+  }
+  const { s } = context;
+  const firstDirective = props.find(
+    (x) => x.type === NodeTypes.DIRECTIVE
+  ) as DirectiveNode;
+
+  processProp(firstDirective, context);
+
+  if (props.length === 1) return;
+
+  const start =
+    firstDirective.exp?.loc.start.offset ?? firstDirective.arg.loc.end.offset;
+  const end =
+    firstDirective.exp?.loc.end.offset ?? firstDirective.arg.loc.end.offset;
+
+  const accessor =
+    type === "class"
+      ? context.accessors.normalizeClass
+      : context.accessors.normalizeStyle;
+
+  if (firstDirective.exp) {
+    s.prependLeft(start, `${accessor}([`);
+    s.prependRight(end, "])");
+  } else {
+    // sugar
+
+    s.overwrite(
+      firstDirective.loc.start.offset,
+      firstDirective.loc.start.offset + 1,
+      `class={${accessor}([`,
+      {}
+    );
+
+    s.prependRight(end, "])");
+  }
+
+  try {
+    for (let i = 0; i < props.length; i++) {
+      const prop = props[i];
+      if (prop === firstDirective) continue;
+
+      const loc =
+        prop.type === NodeTypes.DIRECTIVE
+          ? (prop.exp ?? prop.arg).loc
+          : prop.value.loc;
+
+      if (loc) {
+        // tried to append, but the moving was breaking things
+        s.overwrite(
+          loc.start.offset,
+          loc.start.offset + 1,
+          `,${loc.source[0]}`
+        );
+        s.move(loc.start.offset, loc.end.offset, end);
+
+        s.remove(prop.loc.start.offset, loc.start.offset);
+        s.remove(loc.end.offset, prop.loc.end.offset);
+      }
+
+      if (prop.type === NodeTypes.DIRECTIVE) {
+        processExpression(prop.exp, context);
+      }
+    }
+  } catch (e) {
+    console.error(e);
+  }
+
+  context.declarations.push({
+    type: LocationType.Import,
+    from: "vue",
+    generated: true,
+    node: undefined,
+    items: [
+      {
+        name: type === "class" ? "normalizeClass" : "normalizeStyle",
+        alias: accessor,
+      },
+    ],
+  });
 }
 
 // SLOT CALLBACK DEFINIITON

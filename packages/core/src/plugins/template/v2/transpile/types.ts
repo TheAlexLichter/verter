@@ -37,6 +37,19 @@ export type TranspileContext = {
      * @default "___VERTER___template"
      */
     template: string;
+
+    /**
+     * Override the accessor for the slotCallback,
+     * converts $slots.default(props) into
+     * ```ts
+     * const slot = ___VERTER___SLOT_CALLBACK($slots.default)
+     * slot((props)=> {})
+     * ```
+     */
+    slotCallback: string;
+
+    normaliseClass: string;
+    normaliseStyle: string;
   };
 
   conditions: {
@@ -44,6 +57,13 @@ export type TranspileContext = {
     ifs: string[];
     // other conditions
     elses: string[];
+  };
+
+  attributes: {
+    /**
+     * prevents camel if the prop starts with *
+     */
+    camelWhitelist: string[];
   };
 
   webComponents: string[];

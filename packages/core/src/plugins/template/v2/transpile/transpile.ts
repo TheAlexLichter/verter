@@ -51,6 +51,8 @@ export function transpile(
           slot: PrefixSTR("slot", prefix),
           template: PrefixSTR("template", prefix),
           slotCallback: PrefixSTR("SLOT_CALLBACK", prefix),
+          normalizeClass: PrefixSTR("normalizeClass", prefix),
+          normalizeStyle: PrefixSTR("normalizeStyle", prefix),
         },
         declarations: [],
         conditions: {
@@ -60,6 +62,9 @@ export function transpile(
         ignoredIdentifiers: [],
 
         webComponents: [],
+        attributes: {
+          camelWhitelist: ["data-", "aria-"],
+        },
       } as TranspileContext,
       context,
       {
