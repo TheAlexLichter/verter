@@ -1021,57 +1021,113 @@ describe("tranpiler element", () => {
           }}}"
         `);
       });
-      it.only("multiple real-case", () => {
-        const { result } = transpile(`<div class="flex flex">
+
+      it("multiple real-case", () => {
+        const { result } = transpile(`
         <div class="flex flex-row items-center pb-2.5">
-          <img
-            v-if="props.type === 3"
-            class="mr-2 h-9 w-9 select-none"
-            src="@/assets/test.svg"
-          />
-          <img
-            v-else-if="props.type === 2"
-            class="mr-2 h-9 w-9 select-none"
-            src="@/assets/test.svg"
-          />
-          <span v-if="props.type === 3">发送兑换订单</span>
-          <span v-else-if="props.type === 2"
-            >some text</span
-          >
-        </div>
-        <span
-          class="flex h-9 items-center justify-between border-t border-solid border-neutral-300 pb-2 pt-2.5 text-sm text-neutral-900"
-          >more text
-          <img class="select-none" src="@/assets/arrow-right-small.svg" />
-        </span>
-      </div>`);
+        <img
+          v-if="props.item.content.content.type === 3"
+          class="mr-2 h-9 w-9 select-none"
+          src="@/assets/exchangeorder-icon.svg"
+        />
+        <img
+          v-else-if="props.item.content.content.type === 2"
+          class="mr-2 h-9 w-9 select-none"
+          src="@/assets/rechargeorder-icon.svg"
+        />
+        <span v-if="props.item.content.content.type === 3">发送兑换订单</span>
+        <span v-else-if="props.item.content.content.type === 2"
+          >发送充值订单</span
+        >
+      </div>
+       `);
 
         expect(result).toMatchInlineSnapshot(`
-          "<div class="flex flex">
+          "
                   <div class="flex flex-row items-center pb-2.5">
-                    { ()=> {if(___VERTER___ctx.props.type === 3){<img
-                      
-                      class="mr-2 h-9 w-9 select-none"
-                      src="@/assets/test.svg"
-                    />}
-                    else if(___VERTER___ctx.props.type === 2){<img
-                      
-                      class="mr-2 h-9 w-9 select-none"
-                      src="@/assets/test.svg"
-                    />}
-                    { ()=> {if(___VERTER___ctx.props.type === 3){<span >发送兑换订单</span>}}}
-                    else if(___VERTER___ctx.props.type === 2){<span 
-                      >some text</span
-          }}}          >
-                  </div>
-                  <span
-                    class="flex h-9 items-center justify-between border-t border-solid border-neutral-300 pb-2 pt-2.5 text-sm text-neutral-900"
-                    >more text
-                    <img class="select-none" src="@/assets/arrow-right-small.svg" />
-                  </span>
-                </div>"
+                  { ()=> {if(___VERTER___ctx.props.item.content.content.type === 3){<img
+                    
+                    class="mr-2 h-9 w-9 select-none"
+                    src="@/assets/exchangeorder-icon.svg"
+                  />}
+                  else if(___VERTER___ctx.props.item.content.content.type === 2){<img
+                    
+                    class="mr-2 h-9 w-9 select-none"
+                    src="@/assets/rechargeorder-icon.svg"
+                  />}}}
+                  { ()=> {if(___VERTER___ctx.props.item.content.content.type === 3){<span >发送兑换订单</span>}
+                  else if(___VERTER___ctx.props.item.content.content.type === 2){<span 
+                    >发送充值订单</span
+                  >}}}
+                </div>
+                 "
         `);
       });
+
+      it("ttt", () => {
+        const { result } =
+          transpile(`  <ChatBubble :item="item" justify contentCss="w-248x h-98.5x">
+        <div @click="openModal" class="flex flex-col">
+          <div class="flex flex-row items-center pb-2.5">
+            <img
+              v-if="props.item.content.content.type === 3"
+              class="mr-2 h-9 w-9 select-none"
+              src="@/assets/exchangeorder-icon.svg"
+            />
+            <img
+              v-else-if="props.item.content.content.type === 2"
+              class="mr-2 h-9 w-9 select-none"
+              src="@/assets/rechargeorder-icon.svg"
+            />
+            <span v-if="props.item.content.content.type === 3">发送兑换订单</span>
+            <span v-else-if="props.item.content.content.type === 2"
+              >发送充值订单</span
+            >
+          </div>
+          <span
+            class="flex h-9 items-center justify-between border-t border-solid border-neutral-300 pb-2 pt-2.5 text-sm text-neutral-900"
+            >选择您要查询的订单
+            <img class="select-none" src="@/assets/arrow-right-small.svg" />
+          </span>
+        </div>
+      </ChatBubble>`);
+
+        expect(result).toMatchInlineSnapshot(`
+          "  <___VERTER___comp.ChatBubble item={___VERTER___ctx.item} justify contentCss="w-248x h-98.5x" v-slot={(ComponentInstance)=>{
+          const $slots = ComponentInstance.$slots;
+          {___VERTER___SLOT_CALLBACK($slots.default)(()=>{
+
+          <div onClick={___VERTER___ctx.openModal} class="flex flex-col">
+                    <div class="flex flex-row items-center pb-2.5">
+                      { ()=> {if(___VERTER___ctx.props.item.content.content.type === 3){<img
+                        
+                        class="mr-2 h-9 w-9 select-none"
+                        src="@/assets/exchangeorder-icon.svg"
+                      />}
+                      else if(___VERTER___ctx.props.item.content.content.type === 2){<img
+                        
+                        class="mr-2 h-9 w-9 select-none"
+                        src="@/assets/rechargeorder-icon.svg"
+                      />}}}
+                      { ()=> {if(___VERTER___ctx.props.item.content.content.type === 3){<span >发送兑换订单</span>}
+                      else if(___VERTER___ctx.props.item.content.content.type === 2){<span 
+                        >发送充值订单</span
+                      >}}}
+                    </div>
+                    <span
+                      class="flex h-9 items-center justify-between border-t border-solid border-neutral-300 pb-2 pt-2.5 text-sm text-neutral-900"
+                      >选择您要查询的订单
+                      <img class="select-none" src="@/assets/arrow-right-small.svg" />
+                    </span>
+                  </div>
+          })}
+
+          }}>
+                  
+                </___VERTER___comp.ChatBubble>"
+        `);
+      });
+
       it.skip("multiple real-case", () => {
         const { result } =
           transpile(`<div @click="openModal" class="flex flex-col">

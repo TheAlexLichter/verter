@@ -131,8 +131,10 @@ export function mergeFull(
         context: "global",
         declaration: {
           content: `// Helper to retrieve slots definitions
-declare function ___VERTER_extract_Slots<CompSlots>(comp: { new(): { $slots: CompSlots } }, slots?: undefined): CompSlots
-declare function ___VERTER_extract_Slots<CompSlots, Slots extends Record<string, any> = {}>(comp: { new(): { $slots: CompSlots } }, slots: Slots): Slots`,
+declare function ___VERTER_extract_Slots<CompSlots>(comp: { new(): { $slots: CompSlots } }, slots?: undefined): CompSlots;
+declare function ___VERTER_extract_Slots<CompSlots, Slots extends Record<string, any> = {}>(comp: { new(): { $slots: CompSlots } }, slots: Slots): Slots;
+
+declare function ___VERTER___SLOT_CALLBACK<T>(slot: (...args: T[]) => any): (cb: ((...args: T[]) => any));`,
         },
       },
       // TODO add defineSlots definition here as ___VERTER_DEFINE_SLOTS___
@@ -548,13 +550,13 @@ declare global {
     export interface IntrinsicClassAttributes<T> {
       // $children: T extends { $slots: infer S } ? { default?: never } & { [K in keyof S]: S[K] extends (...args: infer Args) => any ? (...args: Args) => JSX.Element : () => JSX.Element } : { default?: never }
       // $children?: T extends { $slots: infer S } ? S : undefined
-      $children?: (T extends { $slots: infer S } ? S : undefined) | ((c: T) => T extends { $slots: infer S } ? S : undefined)
+      'v-slot'?: (T extends { $slots: infer S } ? S : undefined) | ((c: T) => T extends { $slots: infer S } ? S : undefined)
     }
   }
 }
 declare module 'vue' {
   interface HTMLAttributes {
-    $children?: {
+    'v-slot'?: {
       default: () => JSX.Element
     }
   }

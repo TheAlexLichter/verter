@@ -147,10 +147,10 @@ export default createTranspiler(NodeTypes.ELEMENT, {
     // if we are in a condition block and are the last element close the block
     if (parentContext.conditionBlock && parent.children.at(-1) === node) {
       // parentContext.conditionBlock = true;
-      // context.s.appendRight(node.loc.end.offset, "}}}");
+      // context.s.appendRight(node.loc.end.offset, "}}");
       // context.s.prependRight(node.loc.end.offset, "}}}");
-      // context.s.prependLeft(node.loc.end.offset, "}}}");
-      // context.s.appendLeft(node.loc.end.offset, "}}");
+      // context.s.prependLeft(node.loc.end.offset, "}}");
+      context.s.appendLeft(node.loc.end.offset, "}}");
     }
   },
 });
@@ -457,8 +457,13 @@ function processProps(
   // add initial block
   if (conditionDirective?.name === "if") {
     if (parentContext.conditionBlock) {
+      // get sibling
+
+      const i = parentParent.children.indexOf(parent);
+
+      const prevSibbling = parentParent.children[i - 1];
       // already in block close the previous one
-      context.s.prependLeft(parent.loc.end.offset, "}}");
+      context.s.prependLeft(prevSibbling.loc.end.offset, "}}");
     }
 
     parentContext.conditions = [];
@@ -839,25 +844,46 @@ function processProp(
         // );
       }
 
-      if (prop.name === "else") {
-        // s.prependLeft(prop.loc.end.offset, withNarrowCondition("{\n", context));
-        s.prependLeft(prop.loc.end.offset, "{\n");
-        s.prependLeft(parent.loc.end.offset, "\n}");
-      } else {
-        // // wrap { }
-        // s.prependRight(
-        //   prop.loc.start.offset,
-        //   withNarrowCondition("{ ()=> {", context)
-        // );
-        // s.prependLeft(parent.loc.end.offset, "}}}");
-        
-        s.appendRight(parent.loc.end.offset, "}");
+      // if (prop.name === "else") {
+      //   // s.prependLeft(prop.loc.end.offset, withNarrowCondition("{\n", context));
+      //   s.prependLeft(prop.loc.end.offset, "{\n");
+      //   s.prependLeft(parent.loc.end.offset, "\n}");
+      // } else {
+      //   // // wrap { }
+      //   // s.prependRight(
+      //   //   prop.loc.start.offset,
+      //   //   withNarrowCondition("{ ()=> {", context)
+      //   // );
+      //   // s.prependLeft(parent.loc.end.offset, "}}}");
 
-        // s.appendLeft(parentParent.loc.end.offset, "}");
+      //   s.appendRight(parent.loc.end.offset, "}");
 
-        if (prop.name === "else-if") {
+      //   // s.appendLeft(parentParent.loc.end.offset, "}");
+
+      //   if (prop.name === "else-if") {
+      //     const hiphenIndex = prop.loc.start.offset + "v-else".length;
+      //     s.overwrite(hiphenIndex, hiphenIndex + 1, " ");
+      //   }
+      // }
+
+      switch (prop.name) {
+        case "if": {
+          // if(parentContext.)``
+          s.prependLeft(parent.loc.end.offset, "}");
+
+          break;
+        }
+        case "else-if": {
+          s.prependLeft(parent.loc.end.offset, "}");
+
           const hiphenIndex = prop.loc.start.offset + "v-else".length;
           s.overwrite(hiphenIndex, hiphenIndex + 1, " ");
+          break;
+        }
+        case "else": {
+          s.prependLeft(prop.loc.end.offset, "{\n");
+          s.prependLeft(parent.loc.end.offset, "\n}");
+          break;
         }
       }
       break;
