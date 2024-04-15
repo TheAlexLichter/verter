@@ -86,7 +86,17 @@ export default createTranspiler(NodeTypes.ELEMENT, {
       checkWebComponent(node.tag, tag, context);
     // update the endTag
     if (!node.isSelfClosing) {
-      if (!isWebComponent) {
+      if (node.tagType === ElementTypes.SLOT) {
+        const endTagIndex =
+          node.loc.start.offset + node.loc.source.lastIndexOf(node.tag);
+        if (tag !== node.tag) {
+          context.s.overwrite(
+            endTagIndex,
+            endTagIndex + node.tag.length,
+            "RENDER_SLOT"
+          );
+        }
+      } else if (!isWebComponent) {
         const endTagIndex =
           node.loc.start.offset + node.loc.source.lastIndexOf(node.tag);
         if (tag !== node.tag) {
@@ -176,14 +186,16 @@ function processSlot(
         : undefined
       : x.name === "name"
   );
+  s.remove(node.loc.start.offset, node.loc.start.offset + 1);
 
-  if (name) {
-    s.move(name.loc.start.offset, name.loc.end.offset, node.loc.start.offset);
-  }
-
-  if (parentContext.conditionBlock || parentContext.for) {
-    s.appendRight(
-      node.loc.start.offset,
+  if (parentContext.conditionBlock) {
+    s.prependLeft(
+      node.loc.start.offset + 1,
+      `const RENDER_SLOT = ${context.accessors.slot}`
+    );
+  } else if (parentContext.for) {
+    s.prependLeft(
+      node.loc.start.offset + 1,
       `const RENDER_SLOT = ${context.accessors.slot}`
     );
   } else {
@@ -197,8 +209,14 @@ function processSlot(
       ].join("\n")
     );
   }
+
   if (name) {
-    s.appendLeft(node.loc.start.offset, "[");
+    s.move(
+      name.loc.start.offset,
+      name.loc.end.offset,
+      node.loc.start.offset + 1
+    );
+    s.appendLeft(node.loc.start.offset + 1, "[");
     if (name.type === NodeTypes.ATTRIBUTE) {
       s.remove(name.loc.start.offset, name.loc.start.offset + "name=".length);
     } else {
@@ -210,26 +228,24 @@ function processSlot(
       s.remove(name.exp.loc.end.offset, name.exp.loc.end.offset + 1);
     }
 
-    s.appendRight(node.loc.start.offset, "];\n");
+    s.appendRight(node.loc.start.offset + 1, "];\n");
   } else {
-    s.appendRight(node.loc.start.offset, ".default;\n");
+    s.appendRight(node.loc.start.offset + 1, ".default;\n");
   }
 
-  s.appendRight(node.loc.start.offset, "return ");
+  s.appendRight(node.loc.start.offset + 1, "return <");
 
   s.overwrite(
     node.loc.start.offset + 1,
     node.loc.start.offset + 1 + "slot".length,
-    "RENDER_SLOT"
+    "RENDER_SLOT",
+    {
+      contentOnly: true,
+    }
   );
 
-  if (!node.isSelfClosing) {
-    const index = node.loc.source.lastIndexOf("slot");
-    s.overwrite(
-      node.loc.start.offset + index,
-      node.loc.start.offset + index + "slot".length,
-      "RENDER_SLOT"
-    );
+  if (!parentContext.conditionBlock && !parentContext.for) {
+    s.prependLeft(node.loc.end.offset, "}}");
   }
 }
 

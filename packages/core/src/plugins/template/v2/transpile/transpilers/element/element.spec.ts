@@ -771,7 +771,9 @@ describe("tranpiler element", () => {
           `<span @check-for-something="test"></span>`
         );
 
-        expect(result).toMatchInlineSnapshot(`"<span onCheckForSomething={(...args)=>___VERTER___eventCb(args,($event)=>___VERTER___ctx.test)}></span>"`);
+        expect(result).toMatchInlineSnapshot(
+          `"<span onCheckForSomething={(...args)=>___VERTER___eventCb(args,($event)=>___VERTER___ctx.test)}></span>"`
+        );
       });
 
       it("should append ctx inside of functions", () => {
@@ -780,7 +782,8 @@ describe("tranpiler element", () => {
         );
 
         expect(result).toMatchInlineSnapshot(
-        `"<span onCheckForSomething={(...args)=>___VERTER___eventCb(args,e=> { ___VERTER___ctx.foo = e })}></span>"`);
+          `"<span onCheckForSomething={(...args)=>___VERTER___eventCb(args,e=> { ___VERTER___ctx.foo = e })}></span>"`
+        );
       });
 
       it("event should be ignored", () => {
@@ -1326,64 +1329,155 @@ describe("tranpiler element", () => {
   });
 
   describe("slot", () => {
-    it("parse slot", () => {
-      const { result } = transpile(`<slot/>`);
-      expect(result).toMatchInlineSnapshot(`
-        "{()=>{
+    describe("self-closing", () => {
+      it("parse slot", () => {
+        const { result } = transpile(`<slot/>`);
+        expect(result).toMatchInlineSnapshot(`
+          "{()=>{
 
-        const RENDER_SLOT = ___VERTER___slot.default;
-        return <RENDER_SLOT/>"
-      `);
+          const RENDER_SLOT = ___VERTER___slot.default;
+          return <RENDER_SLOT/>}}"
+        `);
+      });
+
+      it("parse slot with name", () => {
+        const { result } = transpile(`<slot name="test"/>`);
+        expect(result).toMatchInlineSnapshot(`
+          "{()=>{
+
+          const RENDER_SLOT = ___VERTER___slot["test"];
+          return <RENDER_SLOT />}}"
+        `);
+      });
+
+      it("parse slot with name expression", () => {
+        const { result } = transpile(`<slot :name="test"/>`);
+        expect(result).toMatchInlineSnapshot(`
+          "{()=>{
+
+          const RENDER_SLOT = ___VERTER___slot[___VERTER___ctx.test];
+          return <RENDER_SLOT />}}"
+        `);
+      });
+
+      it("with v-bind should be default", () => {
+        const { result } = transpile(`<slot :[msg]="test"/>`);
+        expect(result).toMatchInlineSnapshot(`
+          "{()=>{
+
+          const RENDER_SLOT = ___VERTER___slot.default;
+          return <RENDER_SLOT [___VERTER___ctx.msg]={___VERTER___ctx.test}/>}}"
+        `);
+      });
+
+      it("with v-if", () => {
+        const { result } = transpile(`<slot v-if="false"/>`);
+        expect(result).toMatchInlineSnapshot(`
+          "{ ()=> {if(false){const RENDER_SLOT = ___VERTER___slot.default;
+          return <RENDER_SLOT />}}}"
+        `);
+      });
+
+      it("with v-for", () => {
+        const { result } = transpile(
+          `<slot v-for="name in $slots" :name="name"/>`
+        );
+        expect(result).toMatchInlineSnapshot(`
+          "{___VERTER___renderList(___VERTER___ctx.$slots,name   =>{ const RENDER_SLOT = ___VERTER___slot[name];
+          return <RENDER_SLOT  />})}"
+        `);
+      });
     });
+    describe("with children", () => {
+      it("parse slot", () => {
+        const { result } = transpile(`<slot>{{ 'hello' }}</slot>`);
+        expect(result).toMatchInlineSnapshot(`
+          "{()=>{
 
-    it("parse slot with name", () => {
-      const { result } = transpile(`<slot name="test"/>`);
-      expect(result).toMatchInlineSnapshot(`
-        "{()=>{
+          const RENDER_SLOT = ___VERTER___slot.default;
+          return <RENDER_SLOT>{{ 'hello' }}</RENDER_SLOT>}}"
+        `);
+      });
 
-        const RENDER_SLOT = ___VERTER___slot["test"];
-        return <RENDER_SLOT />"
-      `);
-    });
+      it("parse slot with name", () => {
+        const { result } = transpile(`<slot name="test">{{ 'hello' }}</slot>`);
+        expect(result).toMatchInlineSnapshot(`
+          "{()=>{
 
-    it("parse slot with name expression", () => {
-      const { result } = transpile(`<slot :name="test"/>`);
-      expect(result).toMatchInlineSnapshot(`
-        "{()=>{
+          const RENDER_SLOT = ___VERTER___slot["test"];
+          return <RENDER_SLOT >{{ 'hello' }}</RENDER_SLOT>}}"
+        `);
+      });
 
-        const RENDER_SLOT = ___VERTER___slot[___VERTER___ctx.test];
-        return <RENDER_SLOT />"
-      `);
-    });
+      it("parse slot with name expression", () => {
+        const { result } = transpile(`<slot :name="test">{{ 'hello' }}</slot>`);
+        expect(result).toMatchInlineSnapshot(`
+          "{()=>{
 
-    it("with v-bind should be default", () => {
-      const { result } = transpile(`<slot :[msg]="test"/>`);
-      expect(result).toMatchInlineSnapshot(`
-        "{()=>{
+          const RENDER_SLOT = ___VERTER___slot[___VERTER___ctx.test];
+          return <RENDER_SLOT >{{ 'hello' }}</RENDER_SLOT>}}"
+        `);
+      });
 
-        const RENDER_SLOT = ___VERTER___slot.default;
-        return <RENDER_SLOT [___VERTER___ctx.msg]={___VERTER___ctx.test}/>"
-      `);
-    });
+      it("with v-bind should be default", () => {
+        const { result } = transpile(
+          `<slot :[msg]="test">{{ 'hello' }}</slot>`
+        );
+        expect(result).toMatchInlineSnapshot(`
+          "{()=>{
 
-    it("with v-if", () => {
-      const { result } = transpile(`<slot v-if="false"/>`);
-      expect(result).toMatchInlineSnapshot(`
-        "{ ()=> {if(false){const RENDER_SLOT = ___VERTER___slot.default;
-        return <RENDER_SLOT />}}}"
-      `);
-    });
+          const RENDER_SLOT = ___VERTER___slot.default;
+          return <RENDER_SLOT [___VERTER___ctx.msg]={___VERTER___ctx.test}>{{ 'hello' }}</RENDER_SLOT>}}"
+        `);
+      });
 
-    it.skip("with v-for", () => {
-      const { result } = transpile(
-        `<slot v-for="name in $slots" :name="name"/>`
-      );
-      expect(result).toMatchInlineSnapshot(`
-        "{()=>{
+      it("with v-if", () => {
+        const { result } = transpile(`<slot v-if="false">{{ 'hello' }}</slot>`);
+        expect(result).toMatchInlineSnapshot(`
+          "{ ()=> {if(false){const RENDER_SLOT = ___VERTER___slot.default;
+          return <RENDER_SLOT >{{ 'hello' }}</RENDER_SLOT>}}}"
+        `);
+      });
 
-        const RENDER_SLOT = ___VERTER___slot{___VERTER___renderList(___VERTER___ctx.$slots,name   =>{ .default;
-        return <RENDER_SLOT  name={name}/>})}"
-      `);
+      it("with v-for", () => {
+        const { result } = transpile(
+          `<slot v-for="name in $slots" :name="name">{{ 'hello' }}</slot>`
+        );
+        expect(result).toMatchInlineSnapshot(`
+          "{___VERTER___renderList(___VERTER___ctx.$slots,name   =>{ const RENDER_SLOT = ___VERTER___slot[name];
+          return <RENDER_SLOT  >{{ 'hello' }}</RENDER_SLOT>})}"
+        `);
+      });
+
+      it("nested + v-if", () => {
+        const { result } = transpile(`<slot v-if="disableDrag" :name="selected">
+  <slot :tab="item" />
+</slot>`);
+        expect(result).toMatchInlineSnapshot(`
+          "{ ()=> {if(___VERTER___ctx.disableDrag){const RENDER_SLOT = ___VERTER___slot[___VERTER___ctx.selected];
+          return <RENDER_SLOT  >
+            {()=>{
+
+          const RENDER_SLOT = ___VERTER___slot.default;
+          return <RENDER_SLOT tab={___VERTER___ctx.item} />}}
+          </RENDER_SLOT>}}}"
+        `);
+      });
+      
+      it("nested + v-if + typescript", () => {
+        const { result } = transpile(`<slot v-if="disableDrag" :name="selected as T">
+  <slot :tab="item" />
+</slot>`);
+        expect(result).toMatchInlineSnapshot(`
+          "{ ()=> {if(___VERTER___ctx.disableDrag){const RENDER_SLOT = ___VERTER___slot[___VERTER___ctx.selected as T];
+          return <RENDER_SLOT  >
+            {()=>{
+
+          const RENDER_SLOT = ___VERTER___slot.default;
+          return <RENDER_SLOT tab={___VERTER___ctx.item} />}}
+          </RENDER_SLOT>}}}"
+        `);
+      });
     });
   });
 });
