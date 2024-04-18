@@ -1516,13 +1516,60 @@ describe("tranpiler element", () => {
         `);
       });
 
-      it.skip("element + nested + default", () => {
+      it("element + nested + default", () => {
         const { result } = transpile(
           '<my-comp><slot :name="`page-${p?.name || p}`" :page="p">\n' +
             '<slot v-bind="p" />\n' +
             "</slot></my-comp>"
         );
-        expect(result).toMatchInlineSnapshot();
+        expect(result).toMatchInlineSnapshot(`
+          "<___VERTER___comp.MyComp v-slot={(ComponentInstance)=>{
+          const $slots = ComponentInstance.$slots;
+          {___VERTER___SLOT_CALLBACK($slots.default)(()=>{
+
+          {()=>{
+
+          const RENDER_SLOT = ___VERTER___slot[\`page-\${___VERTER___ctx.p?.name || ___VERTER___ctx.p}\`];
+          return <RENDER_SLOT  page={___VERTER___ctx.p}>
+          {()=>{
+
+          const RENDER_SLOT = ___VERTER___slot.default;
+          return <RENDER_SLOT {...___VERTER___ctx.p} />}}
+          </RENDER_SLOT>}}
+          })}
+
+          }}></___VERTER___comp.MyComp>"
+        `);
+      });
+
+      it("named with a v-if child", () => {
+        const { result } = transpile(`<MyComp>
+      <template #foo>
+         <div></div>
+        <div v-if="foo.n">
+          {{foo.n}}
+        </div>
+        <Comp></Comp>
+      </template>
+      </MyComp>`);
+        expect(result).toMatchInlineSnapshot(`
+          "<___VERTER___comp.MyComp v-slot={(ComponentInstance)=>{
+          const $slots = ComponentInstance.$slots;
+          {___VERTER___SLOT_CALLBACK($slots.foo)(()=>{
+
+          <___VERTER___template >
+                   <div></div>
+                  { ()=> {if(___VERTER___ctx.foo.n){<div >
+                    {{foo.n}}
+                  </div>}}}
+                  <___VERTER___comp.Comp></___VERTER___comp.Comp>
+                </___VERTER___template>
+          })}
+
+          }}>
+                
+                </___VERTER___comp.MyComp>"
+        `);
       });
     });
   });

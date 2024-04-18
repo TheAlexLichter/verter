@@ -572,7 +572,13 @@ function processProps(
     parentContext.conditionBlock = conditionDirective;
   } else if (parentContext.conditionBlock) {
     // already in block close the previous one
-    context.s.prependLeft(parentContext.conditionBlock.loc.end.offset, "}}");
+    const i = parentParent.children.indexOf(parent);
+    const prevSibbling = parentParent.children[i - 1];
+    // already in block close the previous one
+    context.s.prependLeft(prevSibbling.loc.end.offset, "}}");
+
+    // since we handle set the condition to undefined
+    parentContext.conditionBlock = undefined;
   }
 
   const conditions: string[] = [];
@@ -977,7 +983,7 @@ function processProp(
       switch (prop.name) {
         case "if": {
           // if(parentContext.)``
-          s.prependLeft(parent.loc.end.offset, "}");
+          s.appendLeft(parent.loc.end.offset, "}");
 
           break;
         }
