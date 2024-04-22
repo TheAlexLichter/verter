@@ -372,9 +372,17 @@ export function startServer(options: LsConnectionOption = {}) {
     };
   });
 
+  connection.onRequest("textDocument/diagnostic", async (params) => {
+    const doc = documentManager.getDocument(params.textDocument.uri);
+    if (doc) {
+      const diagnostics = await sendDiagnostics(doc);
+      return diagnostics;
+    }
+    throw new Error(`No document found for URI ${params.textDocument.uri}`);
+  });
 
   async function sendDiagnostics(document: VueDocument) {
-    if (document.languageId !== 'vue') return;
+    if (document.languageId !== "vue") return;
 
     try {
       const filename = document.virtualUri;
@@ -388,21 +396,19 @@ export function startServer(options: LsConnectionOption = {}) {
         ...syntacticDiagnostics,
         ...semanticDiagnostics,
         ...suggestionDiagnostics,
-      ].map(x => mapDiagnostic(x, document)).filter(Boolean);
-
-
+      ]
+        .map((x) => mapDiagnostic(x, document))
+        .filter(Boolean);
 
       await connection.sendDiagnostics({
         uri: document.uri,
         diagnostics: allDiagnostics,
-        version: document.version
-      })
-
-
-
+        version: document.version,
+      });
+      return allDiagnostics;
     } catch (e) {
-      console.error(e)
-      debugger
+      console.error(e);
+      debugger;
     }
   }
 
@@ -411,22 +417,19 @@ export function startServer(options: LsConnectionOption = {}) {
 
     if (!doc) return;
     if (doc.version !== params.document.version) {
-      doc.overrideDoc(params.document)
+      doc.overrideDoc(params.document);
     }
-    sendDiagnostics(doc)
-  })
+    sendDiagnostics(doc);
+  });
 
-  documentManager._textDocuments.onDidClose(params => {
+  documentManager._textDocuments.onDidClose((params) => {
     const doc = documentManager.getDocument(params.document.uri);
     if (!doc) return;
-    sendDiagnostics(doc)
-  })
+    sendDiagnostics(doc);
+  });
 
   documentManager.listen(originalConnection);
   connection.listen();
 }
 
 startServer();
-
-
-
