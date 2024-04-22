@@ -10,6 +10,7 @@ import type { CompilerOptions } from "@vue/compiler-core";
 import {
   MagicString,
   SFCDescriptor,
+  SFCParseResult,
   SFCScriptCompileOptions,
   compileScript,
   parse,
@@ -93,6 +94,52 @@ export function createBuilder(config?: Partial<BuilderOptions>) {
         generic: compiled?.attrs.generic as string,
         template: parsed.descriptor.template,
         s: new MagicString(source),
+      } satisfies ParseScriptContext;
+
+      // if (!context.script) throw new Error("No script found");
+
+      // create a map
+      const locations = [
+        ...processPlugins(plugins, context),
+        ...walkPlugins(plugins, context),
+      ].reduce((prev, curr) => {
+        if (!curr) return prev;
+        const type = curr.type;
+        if (!prev[type]) prev[type] = [];
+        prev[type]!.push(curr);
+        return prev;
+      }, {} as Record<LocationType, TypeLocation[]>) as unknown as LocationByType;
+
+      return {
+        locations,
+        context,
+      };
+    },
+
+    fromCompiled(result: SFCParseResult, ignoreScript: boolean = false) {
+      const compiled =
+        !ignoreScript &&
+        (!!result.descriptor.scriptSetup || !!result.descriptor.script)
+          ? compileScriptSafe(result.descriptor, {
+              id: result.descriptor.filename,
+              genDefaultAs: "____VERTER_COMP_OPTION__",
+              ...config?.vue?.compiler,
+              // sourceMap: true,
+              sourceMap: false,
+              // globalTypeFiles: []
+              isProd: true,
+            })
+          : null;
+
+      const context = {
+        filename: result.descriptor.filename,
+        id: result.descriptor.filename,
+        isSetup: Boolean(compiled?.setup),
+        sfc: result,
+        script: compiled,
+        generic: compiled?.attrs.generic as string,
+        template: result.descriptor.template,
+        s: new MagicString(result.descriptor.source),
       } satisfies ParseScriptContext;
 
       // if (!context.script) throw new Error("No script found");

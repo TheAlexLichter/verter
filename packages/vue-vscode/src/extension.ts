@@ -167,6 +167,7 @@ function addDidChangeTextDocumentListener(getClient: GetClient) {
       return;
     }
     const client = getClient();
+
     client.sendNotification(NotificationType.OnDidChangeTsOrJsFile, {
       uri: e.document.uri.toString(true),
       changes: e.contentChanges.map((x) => ({

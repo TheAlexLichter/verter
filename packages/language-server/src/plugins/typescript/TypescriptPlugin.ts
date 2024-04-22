@@ -32,6 +32,9 @@ function getScriptFileNames(resolvedFileNames: string[]) {
   //   new Set(d.concat(vueFiles).concat(resolvedFileNames)).values()
   // );
 
+  // return vueFiles.concat(
+  //   resolvedFileNames.map((x) => `file://${x.replace("%3A", ":")}`)
+  // );
   return vueFiles.concat(resolvedFileNames);
 }
 
@@ -47,6 +50,12 @@ const map = {
 function getSnapshotIfExists(
   fileName: string
 ): (ts.IScriptSnapshot & { version: number }) | undefined {
+  if (fileName.endsWith(".vue")) {
+    debugger;
+  }
+  if (fileName.endsWith(".vue.tsx")) {
+    debugger;
+  }
   const doc = documentManager.getDocument(fileName);
   if (!doc) {
     console.log("no doc found", fileName);
@@ -72,10 +81,19 @@ function getSnapshotIfExists(
 function fileExists(fileName: string) {
   const e = !!documentManager.getDocument(fileName);
   console.log("checking if file exists", fileName);
-  if (~fileName.indexOf(".vue") || fileName.endsWith(".vue")) {
-    if (fileName.endsWith(".vue")) {
-      debugger;
+
+  if (fileName.endsWith(".vue")) {
+    return ts.sys.fileExists(fileName);
+  }
+
+  if (fileName.endsWith(".vue.tsx")) {
+    if (!fileName.startsWith("verter")) {
+      fileName = `verter-virtual:///${fileName
+        .replace(":", "%3A")
+        .replace(".vue.tsx", ".vue")}`;
     }
+  } else {
+    return ts.sys.fileExists(fileName);
   }
 
   // these are virtual files
@@ -110,15 +128,36 @@ function fileExists(fileName: string) {
     debugger;
   }
 
-  return e || snapshots.has(fileName) || ts.sys.fileExists(fileName);
+  if (fileName.endsWith(".vue.tsx")) {
+    fileName = fileName.replace(".vue.tsx", ".vue");
+  }
+
+  if (e || snapshots.has(fileName)) {
+    return true;
+  }
+  if (fileName.startsWith("file:")) {
+    fileName = decodeURIComponent(fileName.replace("file:///", ""));
+  }
+
+  // if (fileName.endsWith(".vue")) {
+  //   debugger;
+  // }
+  return ts.sys.fileExists(fileName);
 }
 
 function readFile(fileName: string) {
+  if (fileName.endsWith(".vue")) {
+    debugger;
+  }
   console.log("reading file", fileName);
 
   if (fileName.startsWith("verter:")) {
     const name = fileName.slice("verter:".length);
     return VirtualFiles[name];
+  }
+
+  if (fileName.endsWith(".vue.tsx")) {
+    fileName = fileName.replace(".vue.tsx", ".vue");
   }
 
   // if (fileName.endsWith('/vue') || fileName.endsWith('/vue/jsx-runtime')) {
@@ -165,6 +204,24 @@ export function getTypescriptService(workspacePath: string) {
 
     const parseConfigHost: ts.ParseConfigHost = {
       ...ts.sys,
+      fileExists(path) {
+        if (path.endsWith(".vue")) {
+          debugger;
+        }
+        if (path.endsWith(".vue.tsx")) {
+          debugger;
+        }
+        return ts.sys.fileExists(path);
+      },
+      readFile(path, encoding) {
+        if (path.endsWith(".vue")) {
+          debugger;
+        }
+        if (path.endsWith(".vue.tsx")) {
+          debugger;
+        }
+        return ts.sys.readFile(path, encoding);
+      },
       readDirectory: (rootDir, extensions, excludes, includes, depth) => {
         return ts.sys.readDirectory(
           rootDir,
@@ -261,6 +318,8 @@ export function getTypescriptService(workspacePath: string) {
           return ts.ScriptKind.JS;
         case ts.Extension.Jsx:
           return ts.ScriptKind.JSX;
+        case ".mts":
+        case ".cts":
         case ts.Extension.Ts:
           return ts.ScriptKind.TS;
         case ts.Extension.Tsx:
@@ -268,6 +327,7 @@ export function getTypescriptService(workspacePath: string) {
         case ts.Extension.Json:
           return ts.ScriptKind.JSON;
         default:
+          console.log("unknown", ext);
           return ts.ScriptKind.Unknown;
       }
     },

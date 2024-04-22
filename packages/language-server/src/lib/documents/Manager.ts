@@ -10,6 +10,7 @@ import { VueDocument } from "./VueDocument";
 
 import { readFileSync, existsSync } from "fs";
 import { VirtualFiles } from "@verter/language-shared";
+import { sys } from "typescript";
 
 export type ListenerType = "open" | "change" | "close";
 
@@ -57,6 +58,7 @@ class DocumentManager {
       console.log("will delete files", params);
       return null;
     });
+
     // setTimeout(() => {
     //   connection.workspace.getWorkspaceFolders().then((x) => {
     //     console.log("workspace folders", x);
@@ -159,6 +161,11 @@ class DocumentManager {
         const vueDoc = new VueDocument(uri, dd.getText());
         this.compiledDocs.set(uri, vueDoc);
         return vueDoc;
+      } else {
+        const path = decodeURIComponent(originalUri.replace("file:///", ""));
+        const vueDoc = new VueDocument(uri, sys.readFile(path, "utf8")!);
+        this.compiledDocs.set(uri, vueDoc);
+        return vueDoc;
       }
     } else if (uri.startsWith("verter:")) {
       let virtualDoc = this.virtualDocs.get(uri);
@@ -172,6 +179,13 @@ class DocumentManager {
         }
       }
       return virtualDoc;
+    } else if (uri.endsWith(".vue.tsx")) {
+      // TODO this is sort of hack, these files should be added
+      // when they are created
+      return this.getDocument(
+        "verter-virtual:///" +
+          uri.replace(":", "%3A").replace(".vue.tsx", ".vue")
+      );
     } else {
       let external = this.externalDocs.get(uri);
       if (!external && existsSync(uri)) {
