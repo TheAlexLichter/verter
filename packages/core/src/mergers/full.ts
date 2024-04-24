@@ -130,7 +130,89 @@ export function mergeFull(
         generated: true,
         context: "global",
         declaration: {
-          content: `// Helper to retrieve slots definitions
+          content: `
+
+import type {
+  EmitsOptions as ___VERTER__EmitsOptions, SlotsType as ___VERTER__SlotsType, DefineComponent as ___VERTER__DefineComponent,
+  ComponentOptions as ___VERTER__ComponentOptions, PropType as ___VERTER__PropType, ObjectEmitsOptions as __VERTER__ObjectEmitsOptions,
+} from 'vue'
+
+
+type EmitsToProps<T extends ___VERTER__EmitsOptions> = T extends (
+  event: infer E extends string,
+  ...args: infer Args
+) => any
+  ? {
+    [K in \`on\${Capitalize<E>}\`]?: (...args: Args) => any
+  }
+  : T extends string[]
+  ? {
+    [K in \`on\${Capitalize<T[number]>}\`]?: (...args: any[]) => any
+  }
+  : T extends __VERTER__ObjectEmitsOptions
+  ? {
+    [K in \`on\${Capitalize<string & keyof T>}\`]?: K extends \`on\${infer C}\`
+    ? (
+      ...args: T[Uncapitalize<C>] extends (...args: infer P) => any
+        ? P
+        : T[Uncapitalize<C>] extends null
+        ? any[]
+        : T[Uncapitalize<C>] extends Array<any>
+        ? T[Uncapitalize<C>]
+        : never
+    ) => any
+    : never
+  }
+  : {}
+
+type ObjectToComponentProps<T> = [T] extends [Readonly<Array<string>>]
+  ? T
+  : [T] extends [Record<string, any>]
+  ? {
+    [K in keyof T]-?: T[K] extends Function
+    ? {
+      type: ___VERTER__PropType<T[K]>
+      required: undefined extends T[K] ? false : true
+    }
+    : {
+      type: ___VERTER__PropType<Exclude<T[K], undefined>>
+      required: undefined extends T[K] ? false : true
+    }
+  }
+  : {}
+
+export type ___VERTER__DeclareComponent<
+  Props = {},
+  Data extends Record<string, any> = {},
+  Emits extends ___VERTER__EmitsOptions = {},
+  Slots extends Record<string, any> = {},
+  Options = {},
+> =
+  (___VERTER__DefineComponent<
+    ObjectToComponentProps<Props>,
+    Data,
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    string,
+    {},
+    Props & EmitsToProps<Emits>,
+    {},
+    ___VERTER__SlotsType<Slots>
+  > & (Options extends infer O extends Record<PropertyKey, {}> ? O : {})) extends infer C ? C & { new(): { $props: { 'v-slot': (c: C & { $slots: Slots }) => any } } } : never
+
+  declare function ___VERTER___AssertAny<T>(o: T extends T & 0 ? never : T): T extends T & 0 ? never : T
+
+  declare function ___VERTER___PATCH_TYPE<T>(options: T): T
+  declare function ___VERTER___PATCH_TYPE<T, Props, Data extends Record<string, any>, Emits, Slots extends Record<PropertyKey, any>>(options: T, props: Props, data?: Data, emits?: Emits, slots?: Slots)
+    : ___VERTER__DeclareComponent<Props, Data, __VERTER__EmitsToObject<Emits>, Slots, T>
+  type __VERTER__EmitsToObject<T> = T extends (event: infer E extends PropertyKey, ...args: infer Args) => any ? { [K in E]: (...args: Args) => true } : {}
+
+          
+// Helper to retrieve slots definitions
 declare function ___VERTER_extract_Slots<CompSlots>(comp: { new(): { $slots: CompSlots } }, slots?: undefined): CompSlots;
 declare function ___VERTER_extract_Slots<CompSlots, Slots extends Record<string, any> = {}>(comp: { new(): { $slots: CompSlots } }, slots: Slots): Slots;
 
@@ -521,7 +603,7 @@ declare function ___VERTER___eventCb<TArgs extends Array<any>, R extends ($event
       ...end,
       "___VERTER___comp;",
       "___VERTER___ctx;",
-      "return ___VERTER_COMP___;",
+      `return ___VERTER___PATCH_TYPE(___VERTER_COMP___, ___VERTER_PROPS___, {}, {}, ___VERTER___slot);`,
     ];
 
     // because of the way prepend works the rendering is reversed

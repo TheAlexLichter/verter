@@ -61,10 +61,6 @@ export const parseFile = (
 ) => {
   logger.info(`[Verter] parsing ${fileName}`);
 
-  return `export default {
-    test: 1
-  }`;
-
   const builder = createBuilder({});
   const compiler = importVueCompiler(fileName)!;
   const parsed = compiler.parse(content, {

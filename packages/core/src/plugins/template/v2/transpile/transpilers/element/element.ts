@@ -194,12 +194,12 @@ function processSlot(
   if (parentContext.conditionBlock) {
     s.prependLeft(
       node.loc.start.offset + 1,
-      `const RENDER_SLOT = ${context.accessors.slot}`
+      `const RENDER_SLOT = ___VERTER___AssertAny(${context.accessors.slot}`
     );
   } else if (parentContext.for) {
     s.prependLeft(
       node.loc.start.offset + 1,
-      `const RENDER_SLOT = ${context.accessors.slot}`
+      `const RENDER_SLOT = ___VERTER___AssertAny(${context.accessors.slot}`
     );
   } else {
     // append { ()=>
@@ -208,7 +208,7 @@ function processSlot(
       [
         "{()=>{",
         generateNarrowCondition(context, true),
-        `const RENDER_SLOT = ${context.accessors.slot}`,
+        `const RENDER_SLOT = ___VERTER___AssertAny(${context.accessors.slot}`,
       ].join("\n")
     );
   }
@@ -231,9 +231,9 @@ function processSlot(
       s.remove(name.exp.loc.end.offset, name.exp.loc.end.offset + 1);
     }
 
-    s.appendRight(node.loc.start.offset + 1, "];\n");
+    s.appendRight(node.loc.start.offset + 1, "]);\n");
   } else {
-    s.appendRight(node.loc.start.offset + 1, ".default;\n");
+    s.appendRight(node.loc.start.offset + 1, ".default);\n");
   }
 
   s.appendRight(node.loc.start.offset + 1, "return <");
