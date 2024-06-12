@@ -16,12 +16,12 @@ import ImportsPlugin from "./imports/index.js";
 // import ExportPlugin from "./export/index.js";
 
 export const defaultPlugins = [
-SetupPlugin,
-OptionsPlugin,
-DeclarationPlugin,
-GenericPlugin,
-TemplatePlugin,
-ImportsPlugin,
+  SetupPlugin,
+  OptionsPlugin,
+  DeclarationPlugin,
+  GenericPlugin,
+  TemplatePlugin,
+  ImportsPlugin,
 ] as PluginOption[];
 
 // import Template from "./template/index.js";

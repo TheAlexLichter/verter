@@ -771,10 +771,14 @@ function processProp(
         s.overwrite(exp.loc.end.offset, exp.loc.end.offset + 1, "}");
 
         // append $event=>
+        const has$event =
+          s.original
+            .slice(exp.loc.start.offset, exp.loc.end.offset)
+            .indexOf("$event") >= 0;
         s.prependLeft(
           exp.loc.start.offset,
           `(...args)=>${context.accessors.eventCb}(args,${
-            !exp.ast || !isFunctionType(exp.ast) ? "($event)=>" : ""
+            !exp.ast || !isFunctionType(exp.ast) ? `(${has$event ? '$event' : ''})=>` : ""
           }`
         );
 

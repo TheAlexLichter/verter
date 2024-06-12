@@ -10,6 +10,11 @@ export default {
     if (!expression) return;
     const source = context.script!.loc.source;
 
+    const varName =
+      node.type === "VariableDeclaration" && node.declarations.length === 1
+        ? node.declarations[0].id.name
+        : undefined;
+
     return [
       // {
       //   type: LocationType.Import,
@@ -36,25 +41,27 @@ export default {
         },
         applyMap(s) {
           s.prependLeft(expression.start!, "const __emits = ");
-        }
-      },
-      // get the type from variable
-      {
-        type: LocationType.Declaration,
-        node: expression,
-        generated: true,
-
-        // TODO debug this to check if this is the correct type
-        declaration: {
-          type: "type",
-          name: "Type__emits",
-          content: `DeclareEmits<typeof __emits>;`,
         },
       },
+      // // get the type from variable
+      // {
+      //   type: LocationType.Declaration,
+      //   node: expression,
+      //   generated: true,
+
+      //   // TODO debug this to check if this is the correct type
+      //   declaration: {
+      //     type: "type",
+      //     name: "Type__emits",
+      //     content: `DeclareEmits<typeof __emits>;`,
+      //   },
+      // },
       {
         type: LocationType.Emits,
+        generated: true,
         node: expression,
-        content: "Type__emits",
+        content: retrieveNodeString(expression, source),
+        varName,
       },
     ];
   },

@@ -763,7 +763,7 @@ describe("tranpiler element", () => {
         const { result } = transpile(`<span @back="navigateToSession(null)"/>`);
 
         expect(result).toMatchInlineSnapshot(
-          `"<span onBack={(...args)=>___VERTER___eventCb(args,($event)=>___VERTER___ctx.navigateToSession(null))}/>"`
+          `"<span onBack={(...args)=>___VERTER___eventCb(args,()=>___VERTER___ctx.navigateToSession(null))}/>"`
         );
       });
       it('should camelCase "on" event listeners', () => {
@@ -772,7 +772,7 @@ describe("tranpiler element", () => {
         );
 
         expect(result).toMatchInlineSnapshot(
-          `"<span onCheckForSomething={(...args)=>___VERTER___eventCb(args,($event)=>___VERTER___ctx.test)}></span>"`
+          `"<span onCheckForSomething={(...args)=>___VERTER___eventCb(args,()=>___VERTER___ctx.test)}></span>"`
         );
       });
 

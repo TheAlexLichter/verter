@@ -47,7 +47,7 @@ export default {
       });
     } catch (e) {
       console.error("eee", e);
-      debugger;
+      PaymentView> debugger;
     }
     // const parsed = parse(ast);
 

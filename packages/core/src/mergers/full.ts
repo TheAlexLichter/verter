@@ -202,7 +202,7 @@ export type ___VERTER__DeclareComponent<
     Props & EmitsToProps<Emits>,
     {},
     ___VERTER__SlotsType<Slots>
-  > & (Options extends infer O extends Record<PropertyKey, {}> ? O : {})) extends infer C ? C & { new(): { $props: { 'v-slot': (c: C & { $slots: Slots }) => any } } } : never
+  > & (Options extends infer O extends Record<PropertyKey, {}> ? O : {})) extends infer C ? C & { new(): { $props: { 'v-slot'?: (c: C & { $slots: Slots }) => any } } } : never
 
   declare function ___VERTER___AssertAny<T>(o: T extends T & 0 ? never : T): T extends T & 0 ? never : T
 
@@ -325,48 +325,82 @@ declare function ___VERTER___eventCb<TArgs extends Array<any>, R extends ($event
       }
 
       // handle props
-      if (locations.props.length) {
-        const props = [];
-        for (const it of locations.props) {
-          if (it.varName) {
-            props.push(it.varName);
-          } else if (it.expression) {
-            s.prependLeft(
-              it.expression.start + context.script.loc.start.offset,
-              "const ___VERTER_PROPS_DECLARATION___ = "
-            );
-            props.push("___VERTER_PROPS_DECLARATION___");
-          }
+      // if (locations.props.length) {
+      const props = [];
+      for (const it of locations.props) {
+        if (it.varName) {
+          props.push(it.varName);
+        } else if (it.expression) {
+          s.prependLeft(
+            it.expression.start + context.script.loc.start.offset,
+            "const ___VERTER_PROPS_DECLARATION___ = "
+          );
+          props.push("___VERTER_PROPS_DECLARATION___");
         }
+      }
 
-        // generate a named prop that we can reference
-        locations.declaration.push({
-          type: LocationType.Declaration,
-          context: "post",
-          generated: true,
-          declaration: {
-            type: "const",
-            name: "___VERTER_PROPS___",
-            content: `{
+      // generate a named prop that we can reference
+      locations.declaration.push({
+        type: LocationType.Declaration,
+        context: "post",
+        generated: true,
+        declaration: {
+          type: "const",
+          name: "___VERTER_PROPS___",
+          content: `{
               ${props.map((x) => `...(${x})`).join(",\n")}
             }`,
-          },
-        });
-        const propsType = "typeof ___VERTER_PROPS___";
+        },
+      });
+      const propsType = "typeof ___VERTER_PROPS___";
 
-        // to prevent typescript from merging types, we need to omit
-        // the exposed values, props have a lower priority in the context
-        exposedCtx.push(
-          // `...({} as ${
-          //   rawToExposeCtx.length
-          //     ? `Omit<${propsType}, ${rawToExposeCtx
-          //         .map((x) => JSON.stringify(x))
-          //         .join("|")}>`
-          //     : propsType
-          // })`
-          `...___VERTER_PROPS___`
-        );
+      // to prevent typescript from merging types, we need to omit
+      // the exposed values, props have a lower priority in the context
+      exposedCtx.push(
+        // `...({} as ${
+        //   rawToExposeCtx.length
+        //     ? `Omit<${propsType}, ${rawToExposeCtx
+        //         .map((x) => JSON.stringify(x))
+        //         .join("|")}>`
+        //     : propsType
+        // })`
+        `...___VERTER_PROPS___`
+      );
+      // }
+
+      // if (locations.emits.length) {
+      const emits = [];
+      for (const it of locations.emits) {
+        if (it.varName) {
+          emits.push(it.varName);
+        } else if (it.node) {
+          s.prependLeft(
+            it.node.start + context.script.loc.start.offset,
+            "const ___VERTER_EMITS_DECLARATION___ = "
+          );
+          emits.push("___VERTER_EMITS_DECLARATION___");
+        }
       }
+      // (x.expression &&
+      //   s.original.slice(
+      //     x.expression.start + context.script.loc.start.offset,
+      //     x.expression.end + context.script.loc.start.offset
+      //   ))
+      locations.declaration.push({
+        type: LocationType.Declaration,
+        context: "post",
+        generated: true,
+        declaration: {
+          type: "const",
+          name: "___VERTER_EMITS___",
+          content: emits[0],
+          // content: `{
+          //     ${emits.map((x) => `...(${x})`).join(",\n")}
+          //   }`,
+        },
+      });
+      // }
+
       exposedCtx.push(
         ...rawToExposeCtx.map((x) => `${x}: __VERTER__unref(${x})`)
       );
@@ -447,7 +481,9 @@ declare function ___VERTER___eventCb<TArgs extends Array<any>, R extends ($event
       });
 
       // this will remove the instance and constructor from __VERTER_COMPONENT__
-      const removeInstanceFromType = `ReturnType<typeof ___VERTER_COMPONENT__<${sanitisedGenericNames}>> extends infer Comp ? Pick<Comp, keyof Comp> : never`;
+      const removeInstanceFromType = `ReturnType<typeof ___VERTER_COMPONENT__<${sanitisedGenericNames}>> extends ${
+        context.isAsync ? "Promise<infer Comp>" : "infer Comp"
+      } ? Pick<Comp, keyof Comp> : never`;
 
       const betterInstance = `{ new<${genericInfo.instance}>(): { $props: { 
         /* props info here */
@@ -471,7 +507,11 @@ declare function ___VERTER___eventCb<TArgs extends Array<any>, R extends ($event
         declaration: {
           type: "const",
           name: "__VERTER__RESULT",
-          content: `___VERTER_COMPONENT__();`,
+          content: `___VERTER_COMPONENT__()${
+            context.isAsync
+              ? "as unknown as ReturnType<typeof ___VERTER_COMPONENT__> extends Promise<infer V> ? V : ReturnType<typeof ___VERTER_COMPONENT__>"
+              : ""
+          };`,
         },
       });
     }
@@ -604,7 +644,7 @@ declare function ___VERTER___eventCb<TArgs extends Array<any>, R extends ($event
       ...end,
       "___VERTER___comp;",
       "___VERTER___ctx;",
-      `return ___VERTER___PATCH_TYPE(___VERTER_COMP___, ___VERTER_PROPS___, {}, {}, ___VERTER___slot);`,
+      `return ___VERTER___PATCH_TYPE(___VERTER_COMP___, ___VERTER_PROPS___, {}, ___VERTER_EMITS___, ___VERTER___slot);`,
     ];
 
     // because of the way prepend works the rendering is reversed
@@ -944,7 +984,9 @@ function scriptTagProcess(block: VerterSFCBlock, context: ParseScriptContext) {
     return;
   }
 
-  const preGeneric = `\nfunction ___VERTER_COMPONENT__`;
+  const preGeneric = `\n${
+    context.isAsync ? "async " : ""
+  }function ___VERTER_COMPONENT__`;
   const postGeneric = `() {\n`;
 
   const generic = block.block.attrs.generic;

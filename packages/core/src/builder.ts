@@ -182,6 +182,7 @@ export function createBuilder(config?: Partial<BuilderOptions>) {
         filename,
         id: filename,
         isSetup: Boolean(compiled?.setup),
+        isAsync: false /* This will be populated by plugins */,
         sfc: parsed,
         script: compiled,
         generic: compiled?.attrs.generic,

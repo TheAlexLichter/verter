@@ -22,6 +22,7 @@ export interface ParseScriptContext {
   id: string;
 
   isSetup: boolean;
+  isAsync: boolean;
   generic?: string | undefined;
 
   sfc: SFCParseResult;
@@ -157,6 +158,7 @@ export interface TypeLocationEmits {
     name: string;
     content: string;
   }[];
+  varName?: string;
 }
 export interface TypeLocationProps {
   type: LocationType.Props;
