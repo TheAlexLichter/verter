@@ -1,0 +1,20 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "include": ["./src"],
+  "exclude": [
+    "dist",
+    "node_modules",
+    "src/generator/_tests_",
+    "src/**/*/_gen.ts",
+    "generated"
+  ],
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "./src",
+
+    "target": "ES2017",
+    "moduleResolution": "NodeNext",
+    "types": ["vitest/importMeta", "vitest/globals"],
+    "jsx": "preserve"
+  }
+}

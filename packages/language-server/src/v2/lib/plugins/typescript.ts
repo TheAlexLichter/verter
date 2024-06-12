@@ -452,12 +452,18 @@ export function formatQuickInfo(
 ) {
   const contents = itemToMarkdown(quickInfo);
 
-  contents.value =
+  console.log("sssd", quickInfo.displayParts);
+
+  const str =
     "```ts\n" +
-    ts.displayPartsToString(quickInfo.displayParts) +
+    displayPartsToString(quickInfo.displayParts) +
     "\n```\n" +
     "\n\n" +
     contents.value;
+
+  // remove the verter virtual
+  // contents.value = str.replace(/verter-virtual:\/\/\//gi, "");
+  contents.value = str;
 
   // Convert the text span to an LSP range
   const range = mapTextSpanToRange(quickInfo.textSpan, document);
@@ -466,6 +472,32 @@ export function formatQuickInfo(
     contents,
     range,
   };
+}
+
+function displayPartsToString(parts: ts.SymbolDisplayPart[]) {
+  return ts.displayPartsToString(
+    parts.map((x) => {
+      // patch the verter-virtual paths
+      if (x.kind === "stringLiteral") {
+        let text = x.text;
+        if (
+          text.startsWith('"verter-virtual:///') ||
+          text.startsWith("'verter-virtual:///")
+        ) {
+          return {
+            ...x,
+            text:
+              x.text.slice(0, 1) +
+              decodeURIComponent(x.text).slice("'verter-virtual:///".length),
+          };
+        } else if (text.startsWith("verter-virtual:///")) {
+          console.log("found textX ", text);
+          debugger;
+        }
+      }
+      return x;
+    })
+  );
 }
 
 function categoryToSeverity(

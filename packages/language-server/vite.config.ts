@@ -1,3 +1,4 @@
+/// <reference types="vitest" />
 import { defineConfig } from "vite";
 
 export default defineConfig({
@@ -8,7 +9,7 @@ export default defineConfig({
       fileName: "server",
       formats: ["cjs"],
     },
-    sourcemap: true,
+    sourcemap: "inline",
 
     rollupOptions: {
       external: [
@@ -23,8 +24,8 @@ export default defineConfig({
         "fs/promises",
         "path",
         "node:path",
-        'node:fs',
-        'fs',
+        "node:fs",
+        "fs",
 
         // deps
 
@@ -37,5 +38,11 @@ export default defineConfig({
         },
       },
     },
+  },
+  define: {
+    "import.meta.vitest": "undefined",
+  },
+  test: {
+    includeSource: ["src/**/*.{js,ts}"],
   },
 });
