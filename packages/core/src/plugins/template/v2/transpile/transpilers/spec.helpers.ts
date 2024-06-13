@@ -7,7 +7,7 @@ export function fromTranspiler<T extends NodeTypes>(
   transpiler: TranspilerPlugin<T>,
   content: string,
   plugins = [] as TranspilerPlugin[],
-  options: Omit<TranspileOptions, "plugins">
+  options: Omit<TranspileOptions, "plugins"> = {}
 ) {
   const source = `<template>${content}</template>`;
 

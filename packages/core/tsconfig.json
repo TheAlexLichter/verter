@@ -11,10 +11,10 @@
   "compilerOptions": {
     "outDir": "./dist",
     "rootDir": "./src",
-    
-    "target": "ES2017",
+
+    "target": "ES6",
     "module": "CommonJS",
     "types": ["vitest/importMeta", "vitest/globals"],
-    "jsx": "preserve",
+    "jsx": "preserve"
   }
 }

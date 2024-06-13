@@ -1,15 +1,5 @@
-import { MagicString } from "@vue/compiler-sfc";
-import { checkForSetupMethodCall, retrieveNodeString } from "../helpers.js";
-import {
-  LocationType,
-  PluginOption,
-  TypeLocationTemplate,
-  WalkResult,
-} from "../types.js";
+import { LocationType, PluginOption, WalkResult } from "../types.js";
 import { transpile } from "./v2/transpile";
-import { parse } from "./parse";
-import { process } from "./process";
-import { createCompoundExpression } from "@vue/compiler-core";
 
 export default {
   name: "Template",
@@ -47,7 +37,6 @@ export default {
       });
     } catch (e) {
       console.error("eee", e);
-      PaymentView> debugger;
     }
     // const parsed = parse(ast);
 

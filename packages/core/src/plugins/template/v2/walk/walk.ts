@@ -3,10 +3,14 @@ import type {
   ParentNode,
   ExpressionNode,
   TemplateChildNode,
+  CompoundExpressionNode,
 } from "@vue/compiler-core";
 import { isObject } from "@vue/shared";
 
-export type VerterNode = ParentNode | ExpressionNode | TemplateChildNode;
+export type VerterNode = Exclude<
+  ParentNode | ExpressionNode | TemplateChildNode,
+  CompoundExpressionNode
+>;
 
 export type WalkOptions<Context> = {
   enter?: (

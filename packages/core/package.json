@@ -7,8 +7,8 @@
   "types": "dist/index.d.ts",
   "type": "module",
   "scripts": {
-    "build": "vite build",
-    "dev": "tsc --watch",
+    "build": "tsc -b",
+    "dev": "tsc -b --watch",
     "generate": "node ./scripts/generate.js",
     "process": "node ./scripts/processDir.js",
     "lint": "TIMING=1 eslint src/**/*.ts* --fix",

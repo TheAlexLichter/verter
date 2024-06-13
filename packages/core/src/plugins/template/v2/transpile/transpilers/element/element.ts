@@ -1,16 +1,12 @@
 import {
   BaseElementNode,
-  Node,
-  CommentNode,
   ComponentNode,
   DirectiveNode,
   ElementTypes,
-  ExpressionNode,
   NodeTypes,
   TemplateChildNode,
   TemplateNode,
   AttributeNode,
-  walkIdentifiers,
   ElementNode,
   isFunctionType,
 } from "@vue/compiler-core";
@@ -23,7 +19,7 @@ import {
 } from "../../utils";
 import { TranspileContext } from "../../types";
 import { VerterNode } from "../../../walk";
-import { camelize, capitalize, isString } from "@vue/shared";
+import { camelize, capitalize } from "@vue/shared";
 import { LocationType } from "../../../../../types";
 
 export default createTranspiler(NodeTypes.ELEMENT, {
@@ -170,7 +166,11 @@ export default createTranspiler(NodeTypes.ELEMENT, {
       context.s.prependLeft(node.loc.end.offset, "}}");
     }
     // if we are in a condition block and are the last element close the block
-    if (parentContext.conditionBlock && parent.children.at(-1) === node) {
+    if (
+      parentContext.conditionBlock &&
+      "children" in parent &&
+      parent.children.at(-1) === node
+    ) {
       context.s.appendLeft(node.loc.end.offset, "}}");
     }
   },
@@ -499,7 +499,7 @@ function processProps(
   parent: ElementNode,
   parentParent: VerterNode,
   parentContext: Record<string, any> & {
-    conditionBlock?: VerterNode | null;
+    conditionBlock?: DirectiveNode | AttributeNode | null;
     conditions?: Array<string> | null;
   }
 ) {
@@ -549,7 +549,7 @@ function processProps(
   );
   // add initial block
   if (conditionDirective?.name === "if") {
-    if (parentContext.conditionBlock) {
+    if (parentContext.conditionBlock && "children" in parentParent) {
       // get sibling
 
       const i = parentParent.children.indexOf(parent);
@@ -570,7 +570,7 @@ function processProps(
     // s.prependLeft(parent.loc.end.offset, "}}}");
   } else if (conditionDirective) {
     parentContext.conditionBlock = conditionDirective;
-  } else if (parentContext.conditionBlock) {
+  } else if (parentContext.conditionBlock && "children" in parentParent) {
     // already in block close the previous one
     const i = parentParent.children.indexOf(parent);
     const prevSibbling = parentParent.children[i - 1];
@@ -778,7 +778,9 @@ function processProp(
         s.prependLeft(
           exp.loc.start.offset,
           `(...args)=>${context.accessors.eventCb}(args,${
-            !exp.ast || !isFunctionType(exp.ast) ? `(${has$event ? '$event' : ''})=>` : ""
+            !exp.ast || !isFunctionType(exp.ast)
+              ? `(${has$event ? "$event" : ""})=>`
+              : ""
           }`
         );
 

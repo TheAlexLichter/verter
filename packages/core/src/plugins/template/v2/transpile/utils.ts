@@ -15,13 +15,13 @@ import {
 import { walk } from "estree-walker";
 
 export type TranspilerOptions<T extends NodeTypes> = {
-  enter?: <ParentContext = Record<string, any>>(
+  enter?: <ParentContext extends Record<string, any> = Record<string, any>>(
     node: VerterNode & { type: T },
     parent: VerterNode,
     context: TranspileContext,
     parentContext: ParentContext
   ) => TranspileContext | void;
-  leave?: <ParentContext = Record<string, any>>(
+  leave?: <ParentContext extends Record<string, any> = Record<string, any>>(
     node: VerterNode & { type: T },
     parent: VerterNode,
     context: TranspileContext,
