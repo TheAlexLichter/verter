@@ -1,5 +1,5 @@
 import type { MagicString } from "@vue/compiler-sfc";
-import type { WalkResult } from "../../../types";
+import type { WalkResult } from "../../../types.js";
 
 export type TranspileContext = {
   s: MagicString;

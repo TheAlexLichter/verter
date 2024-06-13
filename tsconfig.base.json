@@ -15,10 +15,10 @@
     "allowSyntheticDefaultImports": true,
     "jsx": "preserve",
 
-    "paths": {
-      "@verter/core": ["packages/core/src/*"],
-      "@verter/language-shared": ["packages/language-server/src/*"]
-    }
+    // "paths": {
+    //   "@verter/core/*": ["packages/core/src/*"],
+    //   "@verter/language-shared/*": ["packages/language-server/src/*"]
+    // }
   },
   "include": []
 }

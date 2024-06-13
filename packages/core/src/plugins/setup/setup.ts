@@ -1,4 +1,4 @@
-import type { PluginOption } from "../types";
+import type { PluginOption } from "../types.js";
 
 import AsyncPlugin from "./async/index.js";
 import EmitsPlugin from "./emits/index.js";

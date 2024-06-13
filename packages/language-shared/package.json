@@ -3,10 +3,10 @@
   "version": "1.0.0",
   "description": "Contains shared information between the language server and the language client",
   "main": "dist/index.js",
-  "module": "dist/index.mjs",
+  "module": "dist/index.js",
   "type": "commonjs",
   "scripts": {
-    "build": "vite build",
+    "build": "tsc -b",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],

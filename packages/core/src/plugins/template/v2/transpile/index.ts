@@ -1,1 +1,1 @@
-export * from "./transpile";
+export * from "./transpile.js";

@@ -68,7 +68,9 @@ function getSnapshotIfExists(
 
   // snap = { ...ts.ScriptSnapshot.fromString(doc.template?.content ?? doc.getText()), version: doc.version }
   snap = Object.assign(
-    ts.ScriptSnapshot.fromString(doc.template?.content ?? doc.getText()),
+    ts.ScriptSnapshot.fromString(
+      (doc as VueDocument).template?.content ?? doc.getText()
+    ),
     { version: doc.version }
   );
   snapshots.set(fileName, snap);
@@ -213,14 +215,14 @@ export function getTypescriptService(workspacePath: string) {
         }
         return ts.sys.fileExists(path);
       },
-      readFile(path, encoding) {
+      readFile(path) {
         if (path.endsWith(".vue")) {
           debugger;
         }
         if (path.endsWith(".vue.tsx")) {
           debugger;
         }
-        return ts.sys.readFile(path, encoding);
+        return ts.sys.readFile(path);
       },
       readDirectory: (rootDir, extensions, excludes, includes, depth) => {
         return ts.sys.readDirectory(
@@ -412,8 +414,8 @@ export function getTypescriptService(workspacePath: string) {
       if (true) {
         const emptyModules = modules
           .map((x, i) => (!x.resolvedModule ? i : false))
-          .filter(Boolean)
-          .map((x) => moduleLiterals[x].text);
+          .filter((x) => x !== false)
+          .map((x: number) => moduleLiterals[x].text);
         if (emptyModules.length > 0) {
           console.warn("Modules missing!", emptyModules);
         }

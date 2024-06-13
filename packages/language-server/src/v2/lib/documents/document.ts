@@ -208,7 +208,7 @@ export class VueDocument implements TextDocument {
     return (this._template = {
       content: result.content,
       map: result.map,
-      mapConsumer: new SourceMapConsumer(result.map!),
+      mapConsumer: new SourceMapConsumer(result.map! as any),
     });
   }
 }

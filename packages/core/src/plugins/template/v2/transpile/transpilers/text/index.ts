@@ -1,1 +1,2 @@
-export { default } from "./text";
+import Text from "./text.js";
+export default Text;

@@ -2,10 +2,10 @@
   "name": "@verter/core",
   "version": "1.0.0",
   "description": "",
-  "main": "dist/index.cjs",
+  "main": "dist/index.js",
   "module": "dist/index.js",
   "types": "dist/index.d.ts",
-  "type": "module",
+  "type": "commonjs",
   "scripts": {
     "build": "tsc -b",
     "dev": "tsc -b --watch",
@@ -31,7 +31,6 @@
     "@vue/shared": "^3.4.21",
     "acorn-loose": "^8.4.0",
     "deepmerge": "^4.3.1",
-    "estree-walker": "^3.0.3",
     "glob": "^10.3.12",
     "source-map-js": "^1.2.0",
     "typescript": "^5.4.5"

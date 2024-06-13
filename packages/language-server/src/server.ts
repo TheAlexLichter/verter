@@ -1,4 +1,10 @@
-import lsp, { LocationLink, Range } from "vscode-languageserver/node";
+import lsp, {
+  LocationLink,
+  ProposedFeatures,
+  Range,
+  TextDocumentSyncKind,
+  createConnection,
+} from "vscode-languageserver/node";
 import { RequestType, patchClient } from "@verter/language-shared";
 import logger from "./logger";
 import { DocumentManager } from "./v2/lib/documents/manager";
@@ -34,9 +40,9 @@ export function startServer(options: LsConnectionOption = {}) {
   if (!originalConnection) {
     if (process.argv.includes("--stdio")) {
       console.log = console.warn;
-      originalConnection = lsp.createConnection(process.stdin, process.stdout);
+      originalConnection = createConnection(process.stdin, process.stdout);
     } else {
-      originalConnection = lsp.createConnection(lsp.ProposedFeatures.all);
+      originalConnection = createConnection(ProposedFeatures.all);
       // new lsp.IPCMessageReader(process),
       // new lsp.IPCMessageWriter(process)
       // );
@@ -51,12 +57,12 @@ export function startServer(options: LsConnectionOption = {}) {
   const documentManager = new DocumentManager();
   const tsService = getTypescriptService(process.cwd(), documentManager);
 
-  connection.onInitialize((params) => {
+  connection.onInitialize((params): any => {
     return {
       capabilities: {
         textDocumentSync: {
           openClose: true,
-          change: lsp.TextDocumentSyncKind.Incremental,
+          change: TextDocumentSyncKind.Incremental,
           save: {
             includeText: false,
           },
@@ -82,7 +88,7 @@ export function startServer(options: LsConnectionOption = {}) {
     };
   });
 
-  connection.onRequest(RequestType.GetCompiledCode, (uri) => {
+  connection.onRequest(RequestType.GetCompiledCode, (uri): any => {
     const doc = documentManager.getDocument(uri);
 
     if (doc?.languageId === "vue") {
@@ -129,7 +135,7 @@ export function startServer(options: LsConnectionOption = {}) {
     return formatQuickInfo(quickInfo, doc);
   });
 
-  connection.onReferences((params) => {
+  connection.onReferences((params): any => {
     if (!params.textDocument.uri.endsWith(".vue")) return null;
     const doc = documentManager.getDocument<true>(params.textDocument.uri);
     if (!doc) {
@@ -146,7 +152,7 @@ export function startServer(options: LsConnectionOption = {}) {
     return references;
   });
 
-  connection.onTypeDefinition((params) => {
+  connection.onTypeDefinition((params): any => {
     if (!params.textDocument.uri.endsWith(".vue")) return null;
     const doc = documentManager.getDocument<true>(params.textDocument.uri);
     if (!doc) {
@@ -225,7 +231,7 @@ export function startServer(options: LsConnectionOption = {}) {
       return x;
     });
   });
-  connection.onDefinition((params) => {
+  connection.onDefinition((params): any => {
     if (!params.textDocument.uri.endsWith(".vue")) return null;
     const doc = documentManager.getDocument<true>(params.textDocument.uri);
     if (!doc) {
@@ -254,7 +260,7 @@ export function startServer(options: LsConnectionOption = {}) {
             x.textSpan.start + x.textSpan.length
           );
 
-          let contextRange: lsp.Range | undefined = undefined;
+          let contextRange: Range | undefined = undefined;
 
           if (x.contextSpan) {
             const contextStart = tsService.toLineColumnOffset!(
@@ -342,7 +348,7 @@ export function startServer(options: LsConnectionOption = {}) {
     );
   });
 
-  connection.onCompletion((params) => {
+  connection.onCompletion((params): any => {
     if (!params.textDocument.uri.endsWith(".vue")) return null;
 
     const document = documentManager.getDocument<true>(params.textDocument.uri);
@@ -428,14 +434,17 @@ export function startServer(options: LsConnectionOption = {}) {
     return item;
   });
 
-  // connection.onRequest("textDocument/diagnostic", async (params) => {
-  //   const doc = documentManager.getDocument(params.textDocument.uri);
-  //   if (doc) {
-  //     const diagnostics = await sendDiagnostics(doc);
-  //     return diagnostics;
-  //   }
-  //   throw new Error(`No document found for URI ${params.textDocument.uri}`);
-  // });
+  // @ts-ignore
+  connection.onRequest("textDocument/diagnostic", async (params) => {
+    // @ts-ignore
+    const doc = documentManager.getDocument(params.textDocument.uri);
+    if (doc) {
+      const diagnostics = await sendDiagnostics(doc);
+      return diagnostics;
+    }
+    // @ts-ignore
+    throw new Error(`No document found for URI ${params.textDocument.uri}`);
+  });
 
   async function sendDiagnostics(document: VueDocument) {
     if (document.languageId !== "vue") return;

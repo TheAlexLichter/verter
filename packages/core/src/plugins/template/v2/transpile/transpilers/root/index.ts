@@ -1,1 +1,2 @@
-export { default } from "./root";
+import Root from "./root.js";
+export default Root;

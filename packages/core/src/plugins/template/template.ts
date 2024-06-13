@@ -1,5 +1,5 @@
 import { LocationType, PluginOption, WalkResult } from "../types.js";
-import { transpile } from "./v2/transpile";
+import { transpile } from "./v2/transpile/index.js";
 
 export default {
   name: "Template",

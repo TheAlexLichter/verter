@@ -1,5 +1,5 @@
 import { NodeTypes } from "@vue/compiler-core";
-import { createTranspiler } from "../../utils";
+import { createTranspiler } from "../../utils.js";
 
 export default createTranspiler(NodeTypes.COMMENT, {
   enter(node, _, { s }) {

@@ -3,14 +3,11 @@ import { basename } from "path";
 import { WritableDocument } from "./Document";
 import { urlToPath } from "../../utils";
 import { importVueCompiler } from "../../importPackages";
-import { ParseScriptContext } from "@verter/core/src/plugins";
-import { BulkRegistration } from "vscode-languageserver";
 import { MagicString } from "vue/compiler-sfc";
 
-import { SourceMapConsumer } from 'source-map-js'
+import { SourceMapConsumer } from "source-map-js";
 
 import { createBuilder, mergeFull } from "@verter/core";
-
 
 export class VueDocument extends WritableDocument {
   languageId = "vue";
@@ -28,15 +25,15 @@ export class VueDocument extends WritableDocument {
   }
 
   get blocks() {
-    return this._blocks
+    return this._blocks;
   }
 
-  _name = ''
+  _name = "";
 
   private _compiler = importVueCompiler(this._uri);
   private _parsed = this.parseVue();
-  private _builder = createBuilder()
-  private _blocks = [] as Array<'script' | 'template' | 'style'>;
+  private _builder = createBuilder();
+  private _blocks = [] as Array<"script" | "template" | "style">;
   constructor(private _uri: string, private content: string) {
     super();
   }
@@ -45,7 +42,7 @@ export class VueDocument extends WritableDocument {
     this.version = doc.version;
     this.content = doc.getText();
     this._parsed = this.parseVue();
-    this._blocks = this.updateBlocks()
+    this._blocks = this.updateBlocks();
     // this.lineCount = doc.lineCount;
   }
 
@@ -69,7 +66,7 @@ export class VueDocument extends WritableDocument {
     // TODO add options to parser
     const name = basename(this._uri);
 
-    this._name = name
+    this._name = name;
 
     const parsed = this._compiler.parse(this.content, {
       filename: name,
@@ -79,18 +76,18 @@ export class VueDocument extends WritableDocument {
       },
     });
 
+    const { locations, context } = createBuilder().preProcess(
+      name,
+      this.content
+    );
 
-    const { locations, context } = createBuilder().preProcess(name, this.content)
-
-    const result = mergeFull(locations, context)
+    const result = mergeFull(locations, context);
 
     this.template = {
       content: result.content,
       map: result.map,
-      mapConsumer: new SourceMapConsumer(result.map!)
-    }
-
-
+      mapConsumer: new SourceMapConsumer(result.map! as any),
+    };
 
     // console.log("");
     // Template.process({
@@ -122,31 +119,28 @@ export class VueDocument extends WritableDocument {
   }
 
   template: {
-    content: string,
-    map?: ReturnType<MagicString['generateMap']>
-    mapConsumer: SourceMapConsumer
-  }
+    content: string;
+    map?: ReturnType<MagicString["generateMap"]>;
+    mapConsumer: SourceMapConsumer;
+  };
 
   // something() {
 
-
-
   //   this.template.mapConsumer.generatedPositionFor()
   // }
-
 
   protected updateBlocks() {
     const parsed = this._parsed;
     this._blocks = [];
     if (parsed.descriptor.script || parsed.descriptor.scriptSetup) {
-      this._blocks.push('script')
+      this._blocks.push("script");
     }
     if (parsed.descriptor.template) {
-      this._blocks.push('template')
+      this._blocks.push("template");
     }
     if (parsed.descriptor.styles?.length > 0) {
-      this._blocks.push('style')
+      this._blocks.push("style");
     }
-    return this._blocks
+    return this._blocks;
   }
 }

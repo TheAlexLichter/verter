@@ -1,8 +1,8 @@
 import type { RootNode } from "@vue/compiler-core";
 import { MagicString } from "@vue/compiler-sfc";
-import { walk } from "../walk";
-import Transpilers from "./transpilers";
-import type { TranspileContext } from "./types";
+import { walk } from "../walk/index.js";
+import Transpilers from "./transpilers/index.js";
+import type { TranspileContext } from "./types.js";
 
 import deepmerge from "deepmerge";
 

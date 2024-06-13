@@ -33,4 +33,4 @@ import {
   InlayHint,
 } from "vscode-languageserver";
 
-export class PluginHost implements LSProvider, OnWatchFileChanges {}
+// export class PluginHost implements LSProvider, OnWatchFileChanges {}

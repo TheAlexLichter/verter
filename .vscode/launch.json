@@ -20,7 +20,7 @@
       "args": [
         "--extensionDevelopmentPath=${workspaceRoot}/packages/vue-vscode",
 
-        "--disable-extensions",
+        "--disable-extensions"
         // "--extensionDevelopmentPath=${workspaceRoot}/extensions/vscode-vue",
         // "--extensionDevelopmentPath=${workspaceRoot}/extensions/vscode-vue-language-features",
         // "${workspaceRoot}/samples/vue3/typescript-diagnostics"
@@ -29,7 +29,8 @@
         "${workspaceRoot}/packages/vue-vscode/dist/**/*.js",
         "${workspaceRoot}/packages/core/dist/**/*.js",
         "${workspaceRoot}/packages/typescript-plugin/dist/**/*.js",
-        "${workspaceRoot}/packages/language-server/dist/**/*.js"
+        "${workspaceRoot}/packages/language-server/dist/**/*.js",
+        "${workspaceRoot}/packages/language-shared/dist/**/*.js"
       ],
       "autoAttachChildProcesses": true
       //   "preLaunchTask": {
@@ -43,13 +44,14 @@
       "name": "Launch Working Client ",
       "runtimeExecutable": "${execPath}",
       "args": [
-        "--extensionDevelopmentPath=${workspaceRoot}/packages/vue-vscode",
+        "--extensionDevelopmentPath=${workspaceRoot}/packages/vue-vscode"
       ],
       "outFiles": [
         "${workspaceRoot}/packages/vue-vscode/dist/**/*.js",
         "${workspaceRoot}/packages/core/dist/**/*.js",
         "${workspaceRoot}/packages/typescript-plugin/dist/**/*.js",
-        "${workspaceRoot}/packages/language-server/dist/**/*.js"
+        "${workspaceRoot}/packages/language-server/dist/**/*.js",
+        "${workspaceRoot}/packages/language-shared/dist/**/*.js"
       ],
       "autoAttachChildProcesses": true
     }

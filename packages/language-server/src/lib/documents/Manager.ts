@@ -111,7 +111,7 @@ class DocumentManager {
         .replace("file:", "verter-virtual:")
         .replace(".vue", ".vue.tsx");
 
-      const doc = this.getDocument(virtualUrl);
+      const doc = this.getDocument(virtualUrl) as VueDocument;
       doc!.setText(change.document.getText());
 
       ++doc!.version;

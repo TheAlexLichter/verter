@@ -17,7 +17,7 @@ export class DocumentManager {
   readonly _textDocuments = new TextDocuments(TextDocument);
   #disposable: Disposable | undefined;
 
-  files = new Map<string, VueDocument>();
+  files = new Map<string, VueDocument | TextDocument>();
 
   snapshots = new Map<string, ts.IScriptSnapshot & { version: number }>();
 

@@ -1,1 +1,2 @@
-export { default } from "./comment";
+import Comment from "./comment.js";
+export default Comment;

@@ -16,11 +16,11 @@ import {
   generateNarrowCondition,
   processExpression,
   withNarrowCondition,
-} from "../../utils";
-import { TranspileContext } from "../../types";
-import { VerterNode } from "../../../walk";
+} from "../../utils.js";
+import { TranspileContext } from "../../types.js";
+import { VerterNode } from "../../../walk/index.js";
 import { camelize, capitalize } from "@vue/shared";
-import { LocationType } from "../../../../../types";
+import { LocationType } from "../../../../../types.js";
 
 export default createTranspiler(NodeTypes.ELEMENT, {
   enter(node, parent, context, parentContext) {

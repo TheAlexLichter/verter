@@ -9,7 +9,10 @@ import lsp, {
   CompletionItem,
   CompletionItemKind,
   DiagnosticRelatedInformation,
+  DiagnosticSeverity,
   DiagnosticTag,
+  InsertTextFormat,
+  Range,
 } from "vscode-languageserver/node";
 import path from "node:path";
 import { DocumentManager } from "../documents/manager";
@@ -189,6 +192,12 @@ export function getTypescriptService(
       );
     },
     getScriptSnapshot: (filename) => {
+      if (filename.endsWith(".vue")) {
+        debugger;
+      }
+      if (filename.endsWith(".vue.tsx")) {
+        console.log("sssd");
+      }
       return documentManager.getSnapshotIfExists(filename);
     },
 
@@ -281,6 +290,7 @@ export function getTypescriptService(
                     0,
                     -4
                   );
+                  // @ts-expect-error
                   r.resolvedModule.originalPath = originalPath;
                   r.resolvedModule.resolvedFileName =
                     uriToVerterVirtual(originalPath);
@@ -306,8 +316,8 @@ export function getTypescriptService(
       if (true) {
         const emptyModules = modules
           .map((x, i) => (!x.resolvedModule ? i : false))
-          .filter(Boolean)
-          .map((x) => moduleLiterals[x].text);
+          .filter((x) => x !== false)
+          .map((x: number) => moduleLiterals[x].text);
         if (emptyModules.length > 0) {
           console.warn("Modules missing!", emptyModules);
         }
@@ -396,7 +406,7 @@ export function mapCompletion(
       CompletionItemKind.Text,
     detail: tsCompletion.source, // Example mapping, adjust as needed
     insertText: tsCompletion.insertText || tsCompletion.name,
-    insertTextFormat: lsp.InsertTextFormat.PlainText,
+    insertTextFormat: InsertTextFormat.PlainText,
     sortText: tsCompletion.sortText,
     filterText: tsCompletion.filterText,
     documentation: tsCompletion.source,
@@ -439,10 +449,11 @@ export function mapTextSpanToRange(
   const end = document.originalPosition(textSpan.start + textSpan.length);
 
   try {
-    return lsp.Range.create(start, end);
+    return Range.create(start, end);
   } catch (e) {
     console.error("invalid range", e);
     // debugger
+    return undefined;
   }
 }
 
@@ -505,70 +516,66 @@ function categoryToSeverity(
 ): lsp.DiagnosticSeverity {
   switch (category) {
     case ts.DiagnosticCategory.Error: {
-      return lsp.DiagnosticSeverity.Error;
+      return DiagnosticSeverity.Error;
     }
     case ts.DiagnosticCategory.Warning: {
-      return lsp.DiagnosticSeverity.Warning;
+      return DiagnosticSeverity.Warning;
     }
 
     case ts.DiagnosticCategory.Message: {
-      return lsp.DiagnosticSeverity.Information;
+      return DiagnosticSeverity.Information;
     }
     case ts.DiagnosticCategory.Suggestion: {
-      return lsp.DiagnosticSeverity.Hint;
+      return DiagnosticSeverity.Hint;
     }
   }
 }
 
 const KindMap: Record<ts.ScriptElementKind, lsp.CompletionItemKind> = {
-  [ts.ScriptElementKind.unknown]: lsp.CompletionItemKind.Text,
-  [ts.ScriptElementKind.warning]: lsp.CompletionItemKind.Text,
-  [ts.ScriptElementKind.keyword]: lsp.CompletionItemKind.Keyword,
-  [ts.ScriptElementKind.scriptElement]: lsp.CompletionItemKind.File,
-  [ts.ScriptElementKind.moduleElement]: lsp.CompletionItemKind.Module,
-  [ts.ScriptElementKind.classElement]: lsp.CompletionItemKind.Class,
-  [ts.ScriptElementKind.localClassElement]: lsp.CompletionItemKind.Class,
-  [ts.ScriptElementKind.interfaceElement]: lsp.CompletionItemKind.Interface,
-  [ts.ScriptElementKind.typeElement]: lsp.CompletionItemKind.Class, // No direct equivalent in LSP; Class is a reasonable approximation.
-  [ts.ScriptElementKind.enumElement]: lsp.CompletionItemKind.Enum,
-  [ts.ScriptElementKind.enumMemberElement]: lsp.CompletionItemKind.EnumMember,
-  [ts.ScriptElementKind.variableElement]: lsp.CompletionItemKind.Variable,
-  [ts.ScriptElementKind.localVariableElement]: lsp.CompletionItemKind.Variable,
-  [ts.ScriptElementKind.functionElement]: lsp.CompletionItemKind.Function,
-  [ts.ScriptElementKind.localFunctionElement]: lsp.CompletionItemKind.Function,
-  [ts.ScriptElementKind.memberFunctionElement]: lsp.CompletionItemKind.Method,
-  [ts.ScriptElementKind.memberGetAccessorElement]:
-    lsp.CompletionItemKind.Property,
-  [ts.ScriptElementKind.memberSetAccessorElement]:
-    lsp.CompletionItemKind.Property,
-  [ts.ScriptElementKind.memberVariableElement]: lsp.CompletionItemKind.Field,
+  [ts.ScriptElementKind.unknown]: CompletionItemKind.Text,
+  [ts.ScriptElementKind.warning]: CompletionItemKind.Text,
+  [ts.ScriptElementKind.keyword]: CompletionItemKind.Keyword,
+  [ts.ScriptElementKind.scriptElement]: CompletionItemKind.File,
+  [ts.ScriptElementKind.moduleElement]: CompletionItemKind.Module,
+  [ts.ScriptElementKind.classElement]: CompletionItemKind.Class,
+  [ts.ScriptElementKind.localClassElement]: CompletionItemKind.Class,
+  [ts.ScriptElementKind.interfaceElement]: CompletionItemKind.Interface,
+  [ts.ScriptElementKind.typeElement]: CompletionItemKind.Class, // No direct equivalent in LSP; Class is a reasonable approximation.
+  [ts.ScriptElementKind.enumElement]: CompletionItemKind.Enum,
+  [ts.ScriptElementKind.enumMemberElement]: CompletionItemKind.EnumMember,
+  [ts.ScriptElementKind.variableElement]: CompletionItemKind.Variable,
+  [ts.ScriptElementKind.localVariableElement]: CompletionItemKind.Variable,
+  [ts.ScriptElementKind.functionElement]: CompletionItemKind.Function,
+  [ts.ScriptElementKind.localFunctionElement]: CompletionItemKind.Function,
+  [ts.ScriptElementKind.memberFunctionElement]: CompletionItemKind.Method,
+  [ts.ScriptElementKind.memberGetAccessorElement]: CompletionItemKind.Property,
+  [ts.ScriptElementKind.memberSetAccessorElement]: CompletionItemKind.Property,
+  [ts.ScriptElementKind.memberVariableElement]: CompletionItemKind.Field,
   [ts.ScriptElementKind.constructorImplementationElement]:
-    lsp.CompletionItemKind.Constructor,
-  [ts.ScriptElementKind.callSignatureElement]: lsp.CompletionItemKind.Method,
-  [ts.ScriptElementKind.indexSignatureElement]: lsp.CompletionItemKind.Property,
+    CompletionItemKind.Constructor,
+  [ts.ScriptElementKind.callSignatureElement]: CompletionItemKind.Method,
+  [ts.ScriptElementKind.indexSignatureElement]: CompletionItemKind.Property,
   [ts.ScriptElementKind.constructSignatureElement]:
-    lsp.CompletionItemKind.Constructor,
-  [ts.ScriptElementKind.parameterElement]: lsp.CompletionItemKind.Variable,
-  [ts.ScriptElementKind.typeParameterElement]:
-    lsp.CompletionItemKind.TypeParameter,
-  [ts.ScriptElementKind.primitiveType]: lsp.CompletionItemKind.Class,
-  [ts.ScriptElementKind.label]: lsp.CompletionItemKind.Text,
-  [ts.ScriptElementKind.alias]: lsp.CompletionItemKind.Reference,
-  [ts.ScriptElementKind.constElement]: lsp.CompletionItemKind.Constant,
-  [ts.ScriptElementKind.letElement]: lsp.CompletionItemKind.Variable,
-  [ts.ScriptElementKind.directory]: lsp.CompletionItemKind.Folder,
-  [ts.ScriptElementKind.externalModuleName]: lsp.CompletionItemKind.Module,
-  [ts.ScriptElementKind.jsxAttribute]: lsp.CompletionItemKind.Property,
-  [ts.ScriptElementKind.string]: lsp.CompletionItemKind.Constant,
-  [ts.ScriptElementKind.link]: lsp.CompletionItemKind.Reference,
-  [ts.ScriptElementKind.linkName]: lsp.CompletionItemKind.Reference,
-  [ts.ScriptElementKind.linkText]: lsp.CompletionItemKind.Text,
+    CompletionItemKind.Constructor,
+  [ts.ScriptElementKind.parameterElement]: CompletionItemKind.Variable,
+  [ts.ScriptElementKind.typeParameterElement]: CompletionItemKind.TypeParameter,
+  [ts.ScriptElementKind.primitiveType]: CompletionItemKind.Class,
+  [ts.ScriptElementKind.label]: CompletionItemKind.Text,
+  [ts.ScriptElementKind.alias]: CompletionItemKind.Reference,
+  [ts.ScriptElementKind.constElement]: CompletionItemKind.Constant,
+  [ts.ScriptElementKind.letElement]: CompletionItemKind.Variable,
+  [ts.ScriptElementKind.directory]: CompletionItemKind.Folder,
+  [ts.ScriptElementKind.externalModuleName]: CompletionItemKind.Module,
+  [ts.ScriptElementKind.jsxAttribute]: CompletionItemKind.Property,
+  [ts.ScriptElementKind.string]: CompletionItemKind.Constant,
+  [ts.ScriptElementKind.link]: CompletionItemKind.Reference,
+  [ts.ScriptElementKind.linkName]: CompletionItemKind.Reference,
+  [ts.ScriptElementKind.linkText]: CompletionItemKind.Text,
 
-  [ts.ScriptElementKind.variableAwaitUsingElement]:
-    lsp.CompletionItemKind.Variable,
-  [ts.ScriptElementKind.variableUsingElement]: lsp.CompletionItemKind.Variable,
+  [ts.ScriptElementKind.variableAwaitUsingElement]: CompletionItemKind.Variable,
+  [ts.ScriptElementKind.variableUsingElement]: CompletionItemKind.Variable,
   [ts.ScriptElementKind.memberAccessorVariableElement]:
-    lsp.CompletionItemKind.Property,
+    CompletionItemKind.Property,
 };
 
 function retrieveKindBasedOnSymbol(

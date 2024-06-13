@@ -1,6 +1,5 @@
 import { NodeTypes } from "@vue/compiler-core";
-import { createTranspiler } from "../../utils";
-import { processExpression } from "../../utils";
+import { processExpression, createTranspiler } from "../../utils.js";
 
 export default createTranspiler(NodeTypes.INTERPOLATION, {
   enter(node, _parent, context) {

@@ -3,8 +3,9 @@ import {
   walkIdentifiers,
   type ExpressionNode,
 } from "@vue/compiler-core";
-import { VerterNode, WalkOptions } from "../walk";
-import type { TranspileContext } from "./types";
+import { walk } from "@vue/compiler-sfc";
+import { VerterNode, WalkOptions } from "../walk/index.js";
+import type { TranspileContext } from "./types.js";
 
 import * as babel_types from "@babel/types";
 import { isGloballyAllowed, isString, makeMap } from "@vue/shared";
@@ -12,7 +13,6 @@ import {
   isExpression as isExpressionBabel,
   isNode as isNodeBabel,
 } from "@babel/types";
-import { walk } from "estree-walker";
 
 export type TranspilerOptions<T extends NodeTypes> = {
   enter?: <ParentContext extends Record<string, any> = Record<string, any>>(
