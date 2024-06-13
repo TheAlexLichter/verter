@@ -1,20 +1,5 @@
-import lsp, {
-  CompletionItem,
-  CompletionItemKind,
-  DefinitionLink,
-  DiagnosticTag,
-  InsertTextFormat,
-  LocationLink,
-  Position,
-  Range,
-  TextDocuments,
-  combineConsoleFeatures,
-} from "vscode-languageserver/node";
-import {
-  NotificationType,
-  RequestType,
-  patchClient,
-} from "@verter/language-shared";
+import lsp, { LocationLink, Range } from "vscode-languageserver/node";
+import { RequestType, patchClient } from "@verter/language-shared";
 import logger from "./logger";
 import { DocumentManager } from "./v2/lib/documents/manager";
 import { VueDocument } from "./v2/lib/documents/document";
@@ -27,14 +12,7 @@ import {
 } from "./v2/lib/plugins/typescript";
 // import { uriToFilePath } from "vscode-languageserver/lib/node/files";
 
-import { URI } from "vscode-uri";
-import {
-  isVerterVirtual,
-  pathToUrl,
-  uriToVerterVirtual,
-  urlToFileUri,
-  urlToPath,
-} from "./v2/lib/documents/utils";
+import { uriToVerterVirtual, urlToFileUri } from "./v2/lib/documents/utils";
 import ts, {
   Diagnostic,
   DiagnosticWithLocation,
@@ -450,14 +428,14 @@ export function startServer(options: LsConnectionOption = {}) {
     return item;
   });
 
-  connection.onRequest("textDocument/diagnostic", async (params) => {
-    const doc = documentManager.getDocument(params.textDocument.uri);
-    if (doc) {
-      const diagnostics = await sendDiagnostics(doc);
-      return diagnostics;
-    }
-    throw new Error(`No document found for URI ${params.textDocument.uri}`);
-  });
+  // connection.onRequest("textDocument/diagnostic", async (params) => {
+  //   const doc = documentManager.getDocument(params.textDocument.uri);
+  //   if (doc) {
+  //     const diagnostics = await sendDiagnostics(doc);
+  //     return diagnostics;
+  //   }
+  //   throw new Error(`No document found for URI ${params.textDocument.uri}`);
+  // });
 
   async function sendDiagnostics(document: VueDocument) {
     if (document.languageId !== "vue") return;

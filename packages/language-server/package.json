@@ -5,8 +5,9 @@
   "type": "commonjs",
   "main": "dist/server.js",
   "scripts": {
-    "build": "vite build",
-    "watch": "pnpm build --watch",
+    "build": "tsc -b",
+    "x:build": "vite build",
+    "x:watch": "pnpm build --watch",
     "test": "vitest"
   },
   "keywords": [],
