@@ -167,6 +167,11 @@ export type ScriptDeclaration = {
   node: VerterASTNode;
   parent: VerterASTNode;
   declarator: VerterASTNode;
+
+  /**
+   * If true, it's a 'declare' declaration in TypeScript, eg: declare let a: number;
+   */
+  declare?: boolean;
 } & (
   | {
       name: string;
@@ -175,6 +180,16 @@ export type ScriptDeclaration = {
   | {
       name: null;
       rest: VerterASTNode;
+    }
+  | {
+      name: string;
+      async: boolean;
+      expression: boolean;
+      generator: boolean;
+      params: VerterASTNode[];
+      body: VerterASTNode | null;
+      returnType?: VerterASTNode | null;
+      typeParameters?: VerterASTNode | null;
     }
 );
 

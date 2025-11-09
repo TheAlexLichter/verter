@@ -188,6 +188,73 @@ describe("parser script setup", () => {
     expect(items).toMatchObject([]);
   });
 
+  it("function foo() { const a = 0 }", () => {
+    const { items } = parse("function foo() { const a = 0 }");
+    expect(items).toMatchObject([
+      {
+        type: ScriptTypes.Declaration,
+        name: "foo",
+        async: false,
+        expression: false,
+        generator: false,
+        returnType: null,
+        params: [],
+        body: {
+          type: "BlockStatement",
+        },
+        typeParameters: null,
+      },
+    ]);
+  });
+
+  describe("declare", () => {
+    it("declare let a: number", () => {
+      const { items } = parse(`declare let a: number`);
+      expect(items).toMatchObject([
+        {
+          type: ScriptTypes.Declaration,
+          name: "a",
+          rest: false,
+          declare: true,
+        },
+      ]);
+    });
+
+    it("declare const b: string", () => {
+      const { items } = parse(`declare const b: string`);
+      expect(items).toMatchObject([
+        {
+          type: ScriptTypes.Declaration,
+          name: "b",
+          rest: false,
+          declare: true,
+        },
+      ]);
+    });
+
+    it("declare function foo(): void", () => {
+      const { items } = parse(`declare function foo(): void`);
+      expect(items).toMatchObject([
+        {
+          type: ScriptTypes.Declaration,
+          name: "foo",
+          declare: true,
+          async: false,
+          expression: false,
+          generator: false,
+          params: [],
+          body: null,
+          returnType: {
+            type: "TSTypeAnnotation",
+            typeAnnotation: {
+              type: "TSVoidKeyword",
+            },
+          },
+        },
+      ]);
+    });
+  });
+
   describe("async", () => {
     it("await Promise.resolve()", () => {
       const { items } = parse(`await Promise.resolve()`);
@@ -268,9 +335,7 @@ describe("parser script setup", () => {
         },
       ]);
     });
-  });
 
-  describe("async", () => {
     it("async function", () => {
       const { isAsync } = parse(`<script setup lang="ts">
 async function bindGesture(el?: HTMLElement | null) {

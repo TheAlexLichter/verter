@@ -129,10 +129,11 @@ export const MacrosPlugin = definePlugin({
               });
             }
             // prepend props
+            // @ts-expect-error TODO improve this, this shouldn't be necessary
             s.appendLeft(item.declarator.start, `const ${pName}=`);
             s.appendLeft(defineProps.end, ";");
             s.appendRight(defineProps.end, pName);
-
+            // @ts-expect-error TODO improve this, this shouldn't be necessary
             s.move(defineProps.start, defineProps.end, item.declarator.start);
             this.hasWithDefaults = true;
 
@@ -158,7 +159,9 @@ export const MacrosPlugin = definePlugin({
             type: ProcessItemType.Warning,
             message: "MACRO_NOT_IN_SETUP",
             node: item.node,
+            // @ts-expect-error TODO improve this, this shouldn't be necessary
             start: item.node.start,
+            // @ts-expect-error TODO improve this, this shouldn't be necessary
             end: item.node.end,
           });
         }
@@ -173,7 +176,9 @@ export const MacrosPlugin = definePlugin({
           (x.type === ProcessItemType.MacroBinding ||
             x.type === ProcessItemType.DefineModel) &&
           // check if is inside another macro
+          // @ts-expect-error TODO improve this, this shouldn't be necessary
           x.node.start <= item.node.start &&
+          // @ts-expect-error TODO improve this, this shouldn't be necessary
           x.node.end >= item.node.end
       )
     ) {

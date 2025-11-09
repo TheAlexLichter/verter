@@ -296,6 +296,7 @@ export function mapDiagnostic(
   diagnostic: ts.Diagnostic,
   document: VueSubDocument
 ): Diagnostic | undefined {
+  // @ts-expect-error TODO fix this with proper types
   const range = mapTextSpanToRange(diagnostic, document);
   if (!range) {
     return;

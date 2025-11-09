@@ -31,13 +31,16 @@ export const DefineOptionsPlugin = definePlugin({
         if (item.parent.init.callee.name !== "defineOptions") return;
 
         if (ctx.isSetup) {
+          // @ts-expect-error TODO improve this, this shouldn't be necessary
           s.move(item.declarator.start, item.parent.end, 0);
         } else {
           ctx.items.push({
             type: ProcessItemType.Warning,
             message: "INVALID_DEFINE_OPTIONS",
             node: item.node,
+            // @ts-expect-error TODO improve this, this shouldn't be necessary
             start: item.node.start,
+            // @ts-expect-error TODO improve this, this shouldn't be necessary
             end: item.node.end,
           });
         }

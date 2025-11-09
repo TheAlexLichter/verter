@@ -34,7 +34,6 @@ export function handleSetupNode(
       }
       switch (node.type) {
         case "ImportDeclaration":
-        case "FunctionDeclaration":
         case "FunctionExpression":
         case "ArrowFunctionExpression":
           this.skip();
@@ -60,6 +59,30 @@ export function handleSetupNode(
                 ? (node.callee.property as IdentifierName)?.name
                 : "",
           });
+          this.skip();
+          break;
+        }
+
+        case "TSDeclareFunction":
+        case "FunctionDeclaration": {
+          console.log("processing TSF fgoo");
+          items.push({
+            type: ScriptTypes.Declaration,
+            node: node,
+            declarator: node,
+            parent: parent as VerterASTNode,
+            name: node.id?.type === "Identifier" ? node.id.name : "",
+            declare: node.declare,
+            async: node.async,
+            expression: node.expression,
+            generator: node.generator,
+            params: node.params,
+            body: node.body,
+            returnType: node.returnType,
+            typeParameters: node.typeParameters,
+          });
+
+          // prevent walking into function body
           this.skip();
           break;
         }
@@ -97,6 +120,7 @@ export function handleSetupNode(
                   declarator: node,
                   parent: x,
                   rest: false,
+                  declare: node.declare,
                 } as ScriptDeclaration;
               });
           });
@@ -182,7 +206,6 @@ export function createSetupContext(opts: {
 
   const ignoreNodeTypes = new Set<VerterASTNode["type"]>([
     "ImportDeclaration",
-    "FunctionDeclaration",
     "FunctionExpression",
     "ArrowFunctionExpression",
     "CallExpression",
@@ -202,7 +225,7 @@ export function createSetupContext(opts: {
     }
     switch (node.type) {
       case "ImportDeclaration":
-      case "FunctionDeclaration":
+      // case "FunctionDeclaration":
       case "FunctionExpression":
       case "ArrowFunctionExpression":
         context.skip();
@@ -231,6 +254,27 @@ export function createSetupContext(opts: {
         };
       }
 
+      case "TSDeclareFunction":
+      case "FunctionDeclaration": {
+        console.log("processing TSF fgoo");
+        context.skip();
+        return {
+          type: ScriptTypes.Declaration,
+          node: node,
+          declarator: node,
+          parent: parent as VerterASTNode,
+          name: node.id?.type === "Identifier" ? node.id.name : "",
+          declare: node.declare,
+          async: node.async,
+          expression: node.expression,
+          generator: node.generator,
+          params: node.params,
+          body: node.body,
+          returnType: node.returnType,
+          typeParameters: node.typeParameters,
+        };
+      }
+
       case "VariableDeclaration": {
         if (!trackDeclarations) {
           return;
@@ -254,6 +298,7 @@ export function createSetupContext(opts: {
                 declarator: node,
                 parent: x,
                 rest: false,
+                declare: node.declare,
               } as ScriptDeclaration;
             });
 

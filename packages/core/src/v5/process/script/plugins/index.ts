@@ -1,5 +1,6 @@
 export * from "./attributes/index.js";
 export * from "./binding/index.js";
+export * from "./declare/index.js";
 export * from "./full-context/index.js";
 export * from "./script-default/index.js";
 export * from "./imports/index.js";

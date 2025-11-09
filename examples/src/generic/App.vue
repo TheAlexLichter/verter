@@ -11,16 +11,14 @@ defineOptions({
   },
 });
 
-
-const c = new Comp<'foo'>().$props['___VERTER___v-slot'];
-}
+const c = new Comp<"foo">().$props["___VERTER___v-slot"];
 </script>
 
 <template>
   <Comp name="foo">
-    <template  #foo="{ name }"> {{ ___VERTER___slotInstance.$props }}</template>
+    <template #foo="{ name }"> {{ ___VERTER___slotInstance.$props }}</template>
     <template #header></template>
   </Comp>
 
-  <span>{{ $data.bar }}</span>
+  <span>{{ $data.bar + b }}</span>
 </template>

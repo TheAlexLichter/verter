@@ -51,7 +51,11 @@ import type {
   ExportDefaultDeclaration,
   IdentifierName,
   AssignmentTargetRest,
+  TSTypeAnnotation,
+  TSTypeParameterDeclaration,
+  ParamPattern,
 } from "@oxc-project/types";
+import { BlockStatement } from "@babel/types";
 
 export type {
   VariableDeclaration,
@@ -134,4 +138,8 @@ export type VerterASTNode =
   | ExportDefaultDeclaration
   | CallExpression
   | IdentifierName
-  | AssignmentTargetRest;
+  | AssignmentTargetRest
+  | BlockStatement
+  | TSTypeAnnotation
+  | TSTypeParameterDeclaration
+  | ParamPattern;

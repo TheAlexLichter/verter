@@ -70,6 +70,7 @@ export function startServer(options: LsConnectionOption = {}) {
   const documentManager = new DocumentManager();
   const verterManager = new VerterManager(documentManager);
 
+  // @ts-expect-error TODO fix this with proper types
   connection.onInitialize((params) => {
     verterManager.init(params);
     return {
@@ -457,6 +458,7 @@ export function startServer(options: LsConnectionOption = {}) {
   }
 
   // connection.onRequest("$/getCompiledCode", async (params) => {
+  // @ts-expect-error TODO fix this with proper types
   patchedConnection.onRequest(RequestType.GetCompiledCode, async (params) => {
     const doc = documentManager.getDocument(params);
 
@@ -466,6 +468,7 @@ export function startServer(options: LsConnectionOption = {}) {
 
     const ts = verterManager.getTsService(doc.uri);
 
+  // @ts-expect-error TODO fix this with proper types
     const h = ts._host;
 
     let s = "";

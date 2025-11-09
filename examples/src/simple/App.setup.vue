@@ -2,11 +2,9 @@
 defineProps<{
   name: string;
 }>();
-
-// new ___VERTER___Component().$props.name
 </script>
 <template>
   <div>
     <span>{{ name }}</span>
-  </div>    
+  </div>
 </template>

@@ -41,6 +41,7 @@ export const FullContextPlugin = definePlugin({
           const node = b.item.declarator;
           if (name) {
             names.add(name);
+            // @ts-expect-error TODO improve this, this shouldn't be necessary
             content.add(source.slice(node.start, node.end));
           }
         }

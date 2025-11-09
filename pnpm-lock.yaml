@@ -234,22 +234,6 @@ importers:
         specifier: ^4.5.4
         version: 4.5.4(@types/node@24.0.12)(rollup@4.44.2)(typescript@5.8.3)(vite@6.3.5(@types/node@24.0.12))
 
-  packages/languageservice:
-    dependencies:
-      '@verter/core':
-        specifier: workspace:^
-        version: link:../core
-    devDependencies:
-      typescript:
-        specifier: ^5.8.3
-        version: 5.8.3
-      vite:
-        specifier: ^6.3.5
-        version: 6.3.5(@types/node@24.0.12)
-      vite-plugin-dts:
-        specifier: ^4.5.4
-        version: 4.5.4(@types/node@24.0.12)(rollup@4.44.2)(typescript@5.8.3)(vite@6.3.5(@types/node@24.0.12))
-
   packages/oxc-bindings:
     devDependencies:
       '@types/node':

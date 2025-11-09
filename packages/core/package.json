@@ -8,14 +8,14 @@
   "type": "commonjs",
   "typeX": "module",
   "scripts": {
-    "build": "tsc -b",
+    "build": "tsc -b --force",
     "dev": "tsc -b --watch",
     "generate": "node ./scripts/generate.js",
     "process": "node ./scripts/processDir.js",
     "lint": "TIMING=1 eslint src/**/*.ts* --fix",
     "test-generated": "tsc --noEmit --project tsconfig.generated.json",
     "test:generate": "pnpm run generate && pnpm run test-generated",
-    "clean": "rm -rf .turbo && rm -rf node_modules && rm -rf dist",
+    "clean": "npx shx rm -rf .turbo dist tsconfig.tsbuildinfo",
     "test": "vitest"
   },
   "keywords": [],
