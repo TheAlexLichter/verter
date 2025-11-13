@@ -108,6 +108,18 @@ let a = 0`,
     );
   });
 
+  it("not move non-main script to the beginning if its the beginning", () => {
+    const { result } = parse(
+      `let a = 0`,
+      false,
+      "js",
+      "<script>let first = 0;</script>"
+    );
+    expect(result).toMatchInlineSnapshot(
+      `";function script(){let first = 0;}<script setup lang="js">let a = 0</script>"`
+    );
+  });
+
   describe("options", () => {
     test("remove tag", () => {
       const { result } = parse(`export default {}`, "", "js");
